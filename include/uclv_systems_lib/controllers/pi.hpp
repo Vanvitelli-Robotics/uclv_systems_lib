@@ -128,7 +128,11 @@ public:
   /*=============RUNNER===========================*/
   inline virtual double step(double uk) override
   {
-    last_output_ = (Kp_ * uk) + (Ki_ * integrator_->step(uk));
+    last_output_ = (Kp_ * uk);
+    if (integrator_)
+    {
+      last_output_ += (Ki_ * integrator_->step(uk));
+    }
     return last_output_;
   }
   /*==============================================*/
