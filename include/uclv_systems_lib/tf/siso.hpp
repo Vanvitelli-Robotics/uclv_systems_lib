@@ -21,6 +21,8 @@
 
 #pragma once
 
+#include "../siso_interface.hpp"
+
 #include <Eigen/Dense>
 #include <memory>
 #include <iostream>
@@ -84,7 +86,7 @@ namespace uclv::systems::tf::siso
 
     \sa Linear_System_Interface, TF_INTEGRATOR, TF_FIRST_ORDER_FILTER, TF_MIMO
 */
-class SISO
+class SISO : public SISOInterface
 {
 public:
   typedef std::shared_ptr<SISO> SharedPtr;
@@ -314,4 +316,4 @@ public:
   /*==============================================*/
 };
 
-}  // namespace uclv::systems::tf
+}  // namespace uclv::systems::tf::siso
