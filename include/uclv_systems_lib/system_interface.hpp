@@ -1,5 +1,5 @@
 /*
-    SISO interface Class Discrete Time SISO System
+    System interface Class Discrete Time System
 
     Copyright 2024 Università della Campania Luigi Vanvitelli
 
@@ -23,40 +23,44 @@
 
 #include <memory>
 #include <iostream>
+#include <Eigen/Dense>
 
-/*! \file siso.hpp
-    \brief This class represents a generic Discrete Time SISO System.
+/*! \file system_interface.hpp
+    \brief This class represents a generic Discrete Time System.
 */
 
 namespace uclv::systems
 {
 
-class SISOInterface
+template <int dim1_input, int dim1_output, int dim2_input = 1, int dim2_output = 1>
+class SystemInterface
 {
 public:
-  typedef std::shared_ptr<SISOInterface> SharedPtr;
-  typedef std::shared_ptr<const SISOInterface> ConstSharedPtr;
-  typedef std::weak_ptr<SISOInterface> WeakPtr;
-  typedef std::weak_ptr<const SISOInterface> ConstWeakPtr;
-  typedef std::unique_ptr<SISOInterface> UniquePtr;
+  typedef std::shared_ptr<SystemInterface> SharedPtr;
+  typedef std::shared_ptr<const SystemInterface> ConstSharedPtr;
+  typedef std::weak_ptr<SystemInterface> WeakPtr;
+  typedef std::weak_ptr<const SystemInterface> ConstWeakPtr;
+  typedef std::unique_ptr<SystemInterface> UniquePtr;
 
 protected:
 public:
   /*===============CONSTRUCTORS===================*/
 
-  SISOInterface() = default;
+  SystemInterface() = default;
 
   //! Copy Constructor
-  SISOInterface(const SISOInterface& tf) = default;
+  SystemInterface(const SystemInterface& sys) = default;
 
-  virtual ~SISOInterface() = default;
+  virtual ~SystemInterface() = default;
 
   //! Clone the object
-  virtual SISOInterface* clone() const = 0;
+  virtual SystemInterface* clone() const = 0;
 
   /*==============================================*/
 
   /*=============GETTER===========================*/
+
+  inline virtual const Eigen::Matrix<double, dim1_output, dim2_output>& get_output() const = 0;
 
   /*==============================================*/
 
@@ -66,25 +70,43 @@ public:
 
   /*=============RUNNER===========================*/
 
-  inline virtual double step(double u_k) = 0;
+  inline virtual const Eigen::Matrix<double, dim1_output, dim2_output>&
+  step(const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k) = 0;
 
   /*==============================================*/
 
   /*=============VARIE===========================*/
   inline virtual void reset() = 0;
 
-  virtual unsigned int getSizeInput() const
+  virtual unsigned int get_size_input() const
   {
-    return 1;
+    return dim1_input;
   }
 
-  virtual unsigned int getSizeOutput() const
+  virtual unsigned int get_size1_input() const
   {
-    return 1;
+    return dim1_input;
   }
 
-  //! Get the last output
-  virtual double getLastOutput() const = 0;
+  virtual unsigned int get_size2_input() const
+  {
+    return dim2_input;
+  }
+
+  virtual unsigned int get_size_output() const
+  {
+    return dim1_output;
+  }
+
+  virtual unsigned int get_size1_output() const
+  {
+    return dim1_output;
+  }
+
+  virtual unsigned int get_size2_output() const
+  {
+    return dim2_output;
+  }
 
   virtual void display() const = 0;
 
