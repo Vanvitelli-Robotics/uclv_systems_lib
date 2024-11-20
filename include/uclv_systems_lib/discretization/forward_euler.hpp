@@ -21,38 +21,45 @@
 
 #pragma once
 
-#include "state_space_interface.hpp"
+#include "discretizator_interface.hpp"
+#include "../continuous_time/continuous_time_state_space_interface.hpp"
 
-/*! \file linear_state_space.hpp
-    \brief This class represents a generic Discrete Time State Space System.
+/*! \file forward_euler.hpp
+    \brief This class represents the Forward Euler Discretizator.
 */
 
 namespace uclv::systems
 {
 
-template <int dim_state, int dim_input, int dim_output, int num_col = 1>
-class LinearStateSpace : public StateSpaceInterface<dim_state, dim_input, dim_output, num_col, num_col, num_col>
+template <int dim1_state, int dim1_input, int dim1_output, int dim2_state = 1, int dim2_input = 1, int dim2_output = 1>
+class ForwardEuler : public DiscretizatorInterface<dim1_state, dim1_input, dim1_output, dim2_state, dim2_input, dim2_output>
 {
 public:
-  typedef std::shared_ptr<LinearStateSpace> SharedPtr;
-  typedef std::shared_ptr<const LinearStateSpace> ConstSharedPtr;
-  typedef std::weak_ptr<LinearStateSpace> WeakPtr;
-  typedef std::weak_ptr<const LinearStateSpace> ConstWeakPtr;
-  typedef std::unique_ptr<LinearStateSpace> UniquePtr;
+  typedef std::shared_ptr<ForwardEuler> SharedPtr;
+  typedef std::shared_ptr<const ForwardEuler> ConstSharedPtr;
+  typedef std::weak_ptr<ForwardEuler> WeakPtr;
+  typedef std::weak_ptr<const ForwardEuler> ConstWeakPtr;
+  typedef std::unique_ptr<ForwardEuler> UniquePtr;
 
   /*===============CONSTRUCTORS===================*/
 
-  LinearStateSpace() = default;
+  ForwardEuler() = default;
+
+  ForwardEuler(const ContinuousTimeStateSpaceInterface<dim1_input, dim1_output, dim2_input, dim2_output>& sys, double sample_time)
+    : sample_time_(sample_time), sys_(sys.clone())
+  {
+    
+  }
 
   //! Copy Constructor
-  LinearStateSpace(const LinearStateSpace& sys) = default;
+  ForwardEuler(const ForwardEuler& sys) = default;
 
-  virtual ~LinearStateSpace() = default;
+  virtual ~ForwardEuler() = default;
 
   //! Clone the object
-  virtual LinearStateSpace* clone() const
+  virtual ForwardEuler* clone() const
   {
-    return new LinearStateSpace(*this);
+    return new ForwardEuler(*this);
   }
 
   /*==============================================*/
@@ -61,12 +68,12 @@ public:
 
   inline virtual const Eigen::Matrix<double, dim_state, num_col>& get_state() const
   {
-    return x_;
+    return sys_.get_state();
   }
 
   inline virtual const Eigen::Matrix<double, dim_output, num_col>& get_output() const
   {
-    return y_;
+    return sys_.get_output();
   }
 
   /*==============================================*/
@@ -75,8 +82,7 @@ public:
 
   inline virtual void set_state(const Eigen::Ref<const Eigen::Matrix<double, dim_state, num_col>>& x)
   {
-    x_ = x;
-    y_ = C * x_;
+    sys_.set_state(x);
   }
 
   /*==============================================*/
@@ -86,13 +92,13 @@ public:
                                 const Eigen::Ref<const Eigen::Matrix<double, dim_input, num_col>>& u_k,
                                 Eigen::Ref<Eigen::Matrix<double, dim_state, num_col>> out)
   {
-    out = A * x + B * u_k;
+    out = x + sample_time_ * sys_.state_fcn(x, u_k);
   }
   inline virtual void output_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim_state, num_col>>& x,
                                  const Eigen::Ref<const Eigen::Matrix<double, dim_input, num_col>>& u_k,
                                  Eigen::Ref<Eigen::Matrix<double, dim_output, num_col>> out)
   {
-    out = C * x + D * u_k;
+    out = sys_.output_fcn(x, u_k);
   }
 
   inline virtual void jacobx_state_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim_state, num_col>>& x,
@@ -105,7 +111,7 @@ public:
     {
       throw std::runtime_error("The Jacobian of the output function is not defined for num_col != 1");
     }
-    out = A;
+    out = Eigen::Matrix<double, dim_output, dim_state>::Identity() + sample_time_ * sys_.jacobx_state_fcn(x, u_k);
   }
   inline virtual void jacobu_state_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim_state, num_col>>& x,
                                        const Eigen::Ref<const Eigen::Matrix<double, dim_input, num_col>>& u_k,
@@ -117,7 +123,7 @@ public:
     {
       throw std::runtime_error("The Jacobian of the state function is not defined for num_col != 1");
     }
-    out = B;
+    out = sys_.jacobu_state_fcn(x, u_k);
   }
 
   inline virtual void jacobx_output_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim_state, num_col>>& x,
@@ -130,7 +136,7 @@ public:
     {
       throw std::runtime_error("The Jacobian of the output function is not defined for num_col != 1");
     }
-    out = C;
+    out =  sys_.jacobx_state_fcn(x, u_k);
   }
 
   inline virtual void jacobu_output_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim_state, num_col>>& x,
@@ -143,7 +149,7 @@ public:
     {
       throw std::runtime_error("The Jacobian of the output function is not defined for num_col != 1");
     }
-    out = D;
+    out = sys_.jacobu_state_fcn(x, u_k);
   }
 
   inline virtual const Eigen::Matrix<double, dim_output, num_col>&
@@ -159,33 +165,23 @@ public:
   /*=============VARIE===========================*/
   inline virtual void reset()
   {
-    x_.setZero();
-    y_.setZero();
+    sys_.reset();
   }
 
   virtual void display() const
   {
-    std::cout << "Linear State Space System\n";
-    std::cout << "Dim (input-state-output): " << dim_input << "x" << num_col << " - " << dim_state << "x" << num_col
-              << " - " << dim_output << "x" << num_col << "\n";
-    std::cout << "A:\n" << A << "\n";
-    std::cout << "B:\n" << B << "\n";
-    std::cout << "C:\n" << C << "\n";
-    std::cout << "D:\n" << D << "\n";
-    std::cout << "current state:\n" << x_ << "\n";
+    std::cout << "Forward Euler Discretizator" << std::endl;
+    std::cout << "Sample Time: " << sample_time_ << std::endl;
+    sys_.display();
   }
 
   /*==============================================*/
 
 protected:
-  Eigen::Matrix<double, dim_state, num_col> x_;
-  Eigen::Matrix<double, dim_output, num_col> y_;
+  double sample_time_;
+  ContinuousTimeStateSpaceInterface::SharedPtr sys_;
 
-public:
-  Eigen::Matrix<double, dim_state, dim_state> A;
-  Eigen::Matrix<double, dim_state, dim_input> B;
-  Eigen::Matrix<double, dim_output, dim_state> C;
-  Eigen::Matrix<double, dim_output, dim_input> D;
+
 };
 
 }  // namespace uclv::systems

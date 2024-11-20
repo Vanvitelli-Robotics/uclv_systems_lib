@@ -1,9 +1,10 @@
 /*
-    Linear State Space System interface Class Discrete Time System
+    System interface Class Discrete Time System
 
     Copyright 2024 Università della Campania Luigi Vanvitelli
 
-    Author: Marco Costanzo <marco.costanzo@unicampania.it>
+    Authors: Marco Costanzo  <marco.costanzo@unicampania.it>
+             Marco De Simone <marco.desimone@unicampania.it>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -18,10 +19,9 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-
 #pragma once
 
-#include "state_space_interface.hpp"
+#include "continuous_time_state_space_interface.hpp"
 
 /*! \file linear_state_space.hpp
     \brief This class represents a generic Discrete Time State Space System.
@@ -31,28 +31,29 @@ namespace uclv::systems
 {
 
 template <int dim_state, int dim_input, int dim_output, int num_col = 1>
-class LinearStateSpace : public StateSpaceInterface<dim_state, dim_input, dim_output, num_col, num_col, num_col>
+class ContinuousTimeLinearStateSpace
+  : public ContinuousTimeStateSpaceInterface<dim_state, dim_input, dim_output, num_col, num_col, num_col>
 {
 public:
-  typedef std::shared_ptr<LinearStateSpace> SharedPtr;
-  typedef std::shared_ptr<const LinearStateSpace> ConstSharedPtr;
-  typedef std::weak_ptr<LinearStateSpace> WeakPtr;
-  typedef std::weak_ptr<const LinearStateSpace> ConstWeakPtr;
-  typedef std::unique_ptr<LinearStateSpace> UniquePtr;
+  typedef std::shared_ptr<ContinuousTimeLinearStateSpace> SharedPtr;
+  typedef std::shared_ptr<const ContinuousTimeLinearStateSpace> ConstSharedPtr;
+  typedef std::weak_ptr<ContinuousTimeLinearStateSpace> WeakPtr;
+  typedef std::weak_ptr<const ContinuousTimeLinearStateSpace> ConstWeakPtr;
+  typedef std::unique_ptr<ContinuousTimeLinearStateSpace> UniquePtr;
 
   /*===============CONSTRUCTORS===================*/
 
-  LinearStateSpace() = default;
+  ContinuousTimeLinearStateSpace() = default;
 
   //! Copy Constructor
-  LinearStateSpace(const LinearStateSpace& sys) = default;
+  ContinuousTimeLinearStateSpace(const ContinuousTimeLinearStateSpace& sys) = default;
 
-  virtual ~LinearStateSpace() = default;
+  virtual ~ContinuousTimeLinearStateSpace() = default;
 
   //! Clone the object
-  virtual LinearStateSpace* clone() const
+  virtual ContinuousTimeLinearStateSpace* clone() const
   {
-    return new LinearStateSpace(*this);
+    return new ContinuousTimeLinearStateSpace(*this);
   }
 
   /*==============================================*/
@@ -146,14 +147,6 @@ public:
     out = D;
   }
 
-  inline virtual const Eigen::Matrix<double, dim_output, num_col>&
-  step(const Eigen::Ref<const Eigen::Matrix<double, dim_input, num_col>>& u_k)
-  {
-    state_fcn(x_, u_k, x_);
-    output_fcn(x_, u_k, y_);
-    return y_;
-  }
-
   /*==============================================*/
 
   /*=============VARIE===========================*/
@@ -165,7 +158,7 @@ public:
 
   virtual void display() const
   {
-    std::cout << "Linear State Space System\n";
+    std::cout << "Continuous Time Linear State Space System\n";
     std::cout << "Dim (input-state-output): " << dim_input << "x" << num_col << " - " << dim_state << "x" << num_col
               << " - " << dim_output << "x" << num_col << "\n";
     std::cout << "A:\n" << A << "\n";

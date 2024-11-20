@@ -1,6 +1,7 @@
 #include <uclv_systems_lib/controllers/pi.hpp>
 #include <uclv_systems_lib/sim/state_space_system_simulator.hpp>
 #include <uclv_systems_lib/ss/linear_state_space.hpp>
+#include <uclv_systems_lib/continuous_time/continuous_time_linear_state_space.hpp>
 
 int main()
 {
@@ -8,6 +9,7 @@ int main()
   uclv::systems::StateSpaceSystemSimulator<2, 3, 4, 5, 6, 7> simulator1;
   auto system = std::make_shared<uclv::systems::LinearStateSpace<2, 3, 4, 5>>();
   uclv::systems::StateSpaceSystemSimulator<2, 3, 4, 5, 5, 5> simulator2(system);
+  uclv::systems::ContinuousTimeLinearStateSpace<6,2,50,1> continuous_time_linear_state_space_system;
   std::cout << "Hello World!" << std::endl;
   return 0;
 }

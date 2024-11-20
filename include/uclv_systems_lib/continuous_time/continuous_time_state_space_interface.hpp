@@ -1,9 +1,10 @@
 /*
-    State Space System interface Class Discrete Time System
+    System interface Class Discrete Time System
 
     Copyright 2024 Università della Campania Luigi Vanvitelli
 
-    Author: Marco Costanzo <marco.costanzo@unicampania.it>
+    Authors: Marco Costanzo  <marco.costanzo@unicampania.it>
+             Marco De Simone <marco.desimone@unicampania.it>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -21,7 +22,7 @@
 
 #pragma once
 
-#include "../system_interface.hpp"
+#include "continuous_time_system_interface.hpp"
 
 /*! \file state_space_interface.hpp
     \brief This class represents a generic Discrete Time State Space System.
@@ -31,28 +32,29 @@ namespace uclv::systems
 {
 
 template <int dim1_state, int dim1_input, int dim1_output, int dim2_state = 1, int dim2_input = 1, int dim2_output = 1>
-class StateSpaceInterface : public SystemInterface<dim1_input, dim1_output, dim2_input, dim2_output>
+class ContinuousTimeStateSpaceInterface
+  : public ContinuousTimeSystemInterface<dim1_input, dim1_output, dim2_input, dim2_output>
 {
 public:
-  typedef std::shared_ptr<StateSpaceInterface> SharedPtr;
-  typedef std::shared_ptr<const StateSpaceInterface> ConstSharedPtr;
-  typedef std::weak_ptr<StateSpaceInterface> WeakPtr;
-  typedef std::weak_ptr<const StateSpaceInterface> ConstWeakPtr;
-  typedef std::unique_ptr<StateSpaceInterface> UniquePtr;
+  typedef std::shared_ptr<ContinuousTimeStateSpaceInterface> SharedPtr;
+  typedef std::shared_ptr<const ContinuousTimeStateSpaceInterface> ConstSharedPtr;
+  typedef std::weak_ptr<ContinuousTimeStateSpaceInterface> WeakPtr;
+  typedef std::weak_ptr<const ContinuousTimeStateSpaceInterface> ConstWeakPtr;
+  typedef std::unique_ptr<ContinuousTimeStateSpaceInterface> UniquePtr;
 
 protected:
 public:
   /*===============CONSTRUCTORS===================*/
 
-  StateSpaceInterface() = default;
+  ContinuousTimeStateSpaceInterface() = default;
 
   //! Copy Constructor
-  StateSpaceInterface(const StateSpaceInterface& sys) = default;
+  ContinuousTimeStateSpaceInterface(const ContinuousTimeStateSpaceInterface& sys) = default;
 
-  virtual ~StateSpaceInterface() = default;
+  virtual ~ContinuousTimeStateSpaceInterface() = default;
 
   //! Clone the object
-  virtual StateSpaceInterface* clone() const = 0;
+  virtual ContinuousTimeStateSpaceInterface* clone() const = 0;
 
   /*==============================================*/
 
@@ -124,7 +126,7 @@ public:
     }
   }
 
-  // Jacobian of the output function with respect to the input
+  //! Jacobian of the output function with respect to the input
   inline virtual void jacobu_output_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim1_state, dim2_state>>& x,
                                         const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k,
                                         Eigen::Ref<Eigen::Matrix<double, dim1_output, dim1_input>> out)
@@ -137,9 +139,6 @@ public:
       throw std::runtime_error("The Jacobian of the output function is not defined for dim2_output != 1");
     }
   }
-
-  inline virtual const Eigen::Matrix<double, dim1_output, dim2_output>&
-  step(const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k) = 0;
 
   /*==============================================*/
 
