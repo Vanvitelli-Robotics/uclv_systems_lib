@@ -57,7 +57,7 @@ public:
   /*==============================================*/
 
   /*=============GETTER===========================*/
-  inline virtual const double get_sample_time() const = 0;
+  inline virtual double get_sample_time() const = 0;
 };
 
 }  // namespace uclv::systems

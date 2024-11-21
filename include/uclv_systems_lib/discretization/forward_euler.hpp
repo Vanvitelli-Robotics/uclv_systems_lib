@@ -32,7 +32,8 @@ namespace uclv::systems
 {
 
 template <int dim1_state, int dim1_input, int dim1_output, int dim2_state = 1, int dim2_input = 1, int dim2_output = 1>
-class ForwardEuler : public DiscretizatorInterface<dim1_state, dim1_input, dim1_output, dim2_state, dim2_input, dim2_output>
+class ForwardEuler
+  : public DiscretizatorInterface<dim1_state, dim1_input, dim1_output, dim2_state, dim2_input, dim2_output>
 {
 public:
   typedef std::shared_ptr<ForwardEuler> SharedPtr;
@@ -45,10 +46,11 @@ public:
 
   ForwardEuler() = default;
 
-  ForwardEuler(const ContinuousTimeStateSpaceInterface<dim1_input, dim1_output, dim2_input, dim2_output>& sys, double sample_time)
+  ForwardEuler(const ContinuousTimeStateSpaceInterface<dim1_state, dim1_input, dim1_output, dim2_state, dim2_input,
+                                                       dim2_output>& sys,
+               double sample_time)
     : sample_time_(sample_time), sys_(sys.clone())
   {
-    
   }
 
   //! Copy Constructor
@@ -66,98 +68,107 @@ public:
 
   /*=============GETTER===========================*/
 
-  inline virtual const Eigen::Matrix<double, dim_state, num_col>& get_state() const
+  inline virtual const Eigen::Matrix<double, dim1_state, dim2_state>& get_state() const
   {
-    return sys_.get_state();
+    return sys_->get_state();
   }
 
-  inline virtual const Eigen::Matrix<double, dim_output, num_col>& get_output() const
+  inline virtual const Eigen::Matrix<double, dim1_output, dim2_output>& get_output() const
   {
-    return sys_.get_output();
+    return sys_->get_output();
+  }
+
+  inline virtual double get_sample_time() const
+  {
+    return sample_time_;
   }
 
   /*==============================================*/
 
   /*=============SETTER===========================*/
 
-  inline virtual void set_state(const Eigen::Ref<const Eigen::Matrix<double, dim_state, num_col>>& x)
+  inline virtual void set_state(const Eigen::Ref<const Eigen::Matrix<double, dim1_state, dim2_state>>& x)
   {
-    sys_.set_state(x);
+    sys_->set_state(x);
   }
 
   /*==============================================*/
 
   /*=============RUNNER===========================*/
-  inline virtual void state_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim_state, num_col>>& x,
-                                const Eigen::Ref<const Eigen::Matrix<double, dim_input, num_col>>& u_k,
-                                Eigen::Ref<Eigen::Matrix<double, dim_state, num_col>> out)
+  inline virtual void state_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim1_state, dim2_state>>& x,
+                                const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k,
+                                Eigen::Ref<Eigen::Matrix<double, dim1_state, dim2_state>> out)
   {
-    out = x + sample_time_ * sys_.state_fcn(x, u_k);
+    sys_->state_fcn(x, u_k, out);
+    out = x + sample_time_ * out;
   }
-  inline virtual void output_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim_state, num_col>>& x,
-                                 const Eigen::Ref<const Eigen::Matrix<double, dim_input, num_col>>& u_k,
-                                 Eigen::Ref<Eigen::Matrix<double, dim_output, num_col>> out)
+  inline virtual void output_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim1_state, dim2_state>>& x,
+                                 const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k,
+                                 Eigen::Ref<Eigen::Matrix<double, dim1_output, dim2_output>> out)
   {
-    out = sys_.output_fcn(x, u_k);
+    sys_->output_fcn(x, u_k, out);
   }
 
-  inline virtual void jacobx_state_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim_state, num_col>>& x,
-                                       const Eigen::Ref<const Eigen::Matrix<double, dim_input, num_col>>& u_k,
-                                       Eigen::Ref<Eigen::Matrix<double, dim_state, dim_state>> out)
+  inline virtual void jacobx_state_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim1_state, dim2_state>>& x,
+                                       const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k,
+                                       Eigen::Ref<Eigen::Matrix<double, dim1_state, dim1_state>>& out)
   {
     (void)x;
     (void)u_k;
-    if (num_col != 1)
+    if (dim2_state != 1)
     {
-      throw std::runtime_error("The Jacobian of the output function is not defined for num_col != 1");
+      throw std::runtime_error("The Jacobian of the output function is not defined for dim2_state != 1");
     }
-    out = Eigen::Matrix<double, dim_output, dim_state>::Identity() + sample_time_ * sys_.jacobx_state_fcn(x, u_k);
+    sys_->jacobx_state_fcn(x, u_k, out);
+    out = Eigen::Matrix<double, dim1_state, dim1_state>::Identity() + sample_time_ * out;
   }
-  inline virtual void jacobu_state_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim_state, num_col>>& x,
-                                       const Eigen::Ref<const Eigen::Matrix<double, dim_input, num_col>>& u_k,
-                                       Eigen::Ref<Eigen::Matrix<double, dim_state, dim_input>> out)
+  inline virtual void jacobu_state_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim1_state, dim2_state>>& x,
+                                       const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k,
+                                       Eigen::Ref<Eigen::Matrix<double, dim1_state, dim1_input>>& out)
   {
     (void)x;
     (void)u_k;
-    if (num_col != 1)
+    if (dim2_state != 1)
     {
-      throw std::runtime_error("The Jacobian of the state function is not defined for num_col != 1");
+      throw std::runtime_error("The Jacobian of the state function is not defined for dim2_state != 1");
     }
-    out = sys_.jacobu_state_fcn(x, u_k);
+    sys_->jacobu_state_fcn(x, u_k, out);
   }
 
-  inline virtual void jacobx_output_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim_state, num_col>>& x,
-                                        const Eigen::Ref<const Eigen::Matrix<double, dim_input, num_col>>& u_k,
-                                        Eigen::Ref<Eigen::Matrix<double, dim_output, dim_state>> out)
+  inline virtual void jacobx_output_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim1_state, dim2_state>>& x,
+                                        const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k,
+                                        Eigen::Ref<Eigen::Matrix<double, dim1_output, dim1_state>>& out)
   {
     (void)x;
     (void)u_k;
-    if (num_col != 1)
+    if (dim2_output != 1)
     {
-      throw std::runtime_error("The Jacobian of the output function is not defined for num_col != 1");
+      throw std::runtime_error("The Jacobian of the output function is not defined for dim2_output != 1");
     }
-    out =  sys_.jacobx_state_fcn(x, u_k);
+    sys_->jacobx_output_fcn(x, u_k, out);
   }
 
-  inline virtual void jacobu_output_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim_state, num_col>>& x,
-                                        const Eigen::Ref<const Eigen::Matrix<double, dim_input, num_col>>& u_k,
-                                        Eigen::Ref<Eigen::Matrix<double, dim_output, dim_input>> out)
+  inline virtual void jacobu_output_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim1_state, dim2_state>>& x,
+                                        const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k,
+                                        Eigen::Ref<Eigen::Matrix<double, dim1_output, dim1_input>>& out)
   {
     (void)x;
     (void)u_k;
-    if (num_col != 1)
+    if (dim2_output != 1)
     {
-      throw std::runtime_error("The Jacobian of the output function is not defined for num_col != 1");
+      throw std::runtime_error("The Jacobian of the output function is not defined for dim2_output != 1");
     }
-    out = sys_.jacobu_state_fcn(x, u_k);
+    sys_->jacobu_output_fcn(x, u_k, out);
   }
 
-  inline virtual const Eigen::Matrix<double, dim_output, num_col>&
-  step(const Eigen::Ref<const Eigen::Matrix<double, dim_input, num_col>>& u_k)
+  inline virtual const Eigen::Matrix<double, dim1_output, dim2_output>&
+  step(const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k)
   {
+    Eigen::Matrix<double, dim1_state, dim2_state> x_ = sys_->get_state();
     state_fcn(x_, u_k, x_);
-    output_fcn(x_, u_k, y_);
-    return y_;
+    sys_->set_state(x_);
+
+    return get_output();
   }
 
   /*==============================================*/
@@ -165,23 +176,22 @@ public:
   /*=============VARIE===========================*/
   inline virtual void reset()
   {
-    sys_.reset();
+    sys_->reset();
   }
 
   virtual void display() const
   {
     std::cout << "Forward Euler Discretizator" << std::endl;
     std::cout << "Sample Time: " << sample_time_ << std::endl;
-    sys_.display();
+    sys_->display();
   }
 
   /*==============================================*/
 
 protected:
   double sample_time_;
-  ContinuousTimeStateSpaceInterface::SharedPtr sys_;
-
-
+  typename ContinuousTimeStateSpaceInterface<dim1_state, dim1_input, dim1_output, dim2_state, dim2_input,
+                                             dim2_output>::SharedPtr sys_;
 };
 
 }  // namespace uclv::systems

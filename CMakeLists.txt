@@ -57,6 +57,10 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
   add_executable(test_compile test/test_compile.cpp)
   target_link_libraries(test_compile Eigen3::Eigen)
+  add_executable(test_euler_simulator test/test_euler_simulator.cpp)
+  target_link_libraries(test_euler_simulator Eigen3::Eigen)
+
+
 endif()
 
 ament_package()

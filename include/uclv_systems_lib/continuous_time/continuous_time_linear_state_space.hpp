@@ -43,6 +43,14 @@ public:
 
   /*===============CONSTRUCTORS===================*/
 
+  ContinuousTimeLinearStateSpace(Eigen::Ref<const Eigen::Matrix<double, dim_state, dim_state>> A,
+                                 Eigen::Ref<const Eigen::Matrix<double, dim_state, dim_input>> B,
+                                 Eigen::Ref<const Eigen::Matrix<double, dim_output, dim_state>> C,
+                                 Eigen::Ref<const Eigen::Matrix<double, dim_output, dim_input>> D)
+    : A(A), B(B), C(C), D(D)
+  {
+  } 
+
   ContinuousTimeLinearStateSpace() = default;
 
   //! Copy Constructor
