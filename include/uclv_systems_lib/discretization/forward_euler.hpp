@@ -164,8 +164,9 @@ public:
   inline virtual const Eigen::Matrix<double, dim1_output, dim2_output>&
   step(const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k)
   {
-    Eigen::Matrix<double, dim1_state, dim2_state> x_ = sys_->get_state();
-    state_fcn(x_, u_k, x_);
+    Eigen::Matrix<double, dim1_state, dim2_state> x_;
+
+    state_fcn(sys_->get_state(), u_k, x_);
     sys_->set_state(x_);
 
     return get_output();
