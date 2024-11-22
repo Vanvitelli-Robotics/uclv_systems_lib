@@ -59,6 +59,8 @@ if(BUILD_TESTING)
   target_link_libraries(test_compile Eigen3::Eigen)
   add_executable(test_euler_simulator test/test_euler_simulator.cpp)
   target_link_libraries(test_euler_simulator Eigen3::Eigen)
+  add_executable(test_ekf test/test_ekf.cpp)
+  target_link_libraries(test_ekf Eigen3::Eigen)
 
 
 endif()

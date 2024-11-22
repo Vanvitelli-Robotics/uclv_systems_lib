@@ -1,9 +1,10 @@
 /*
-    Linear State Space System interface Class Discrete Time System
+    System interface Class Discrete Time System
 
     Copyright 2024 Università della Campania Luigi Vanvitelli
 
-    Author: Marco Costanzo <marco.costanzo@unicampania.it>
+    Authors: Marco Costanzo  <marco.costanzo@unicampania.it>
+             Marco De Simone <marco.desimone@unicampania.it>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -42,14 +43,16 @@ public:
   typedef std::weak_ptr<const ForwardEuler> ConstWeakPtr;
   typedef std::unique_ptr<ForwardEuler> UniquePtr;
 
+  typedef ::uclv::systems::ContinuousTimeStateSpaceInterface<dim1_state, dim1_input, dim1_output, dim2_state,
+                                                             dim2_input, dim2_output>
+      ContinuousTimeStateSpaceInterface;
+
   /*===============CONSTRUCTORS===================*/
 
   ForwardEuler() = default;
 
-  ForwardEuler(const ContinuousTimeStateSpaceInterface<dim1_state, dim1_input, dim1_output, dim2_state, dim2_input,
-                                                       dim2_output>& sys,
-               double sample_time)
-    : sample_time_(sample_time), sys_(sys.clone())
+  ForwardEuler(typename ContinuousTimeStateSpaceInterface::SharedPtr system_ptr, double sample_time)
+    : sys_(system_ptr), sample_time_(sample_time)
   {
   }
 
@@ -190,9 +193,8 @@ public:
   /*==============================================*/
 
 protected:
+  typename ContinuousTimeStateSpaceInterface::SharedPtr sys_;
   double sample_time_;
-  typename ContinuousTimeStateSpaceInterface<dim1_state, dim1_input, dim1_output, dim2_state, dim2_input,
-                                             dim2_output>::SharedPtr sys_;
 };
 
 }  // namespace uclv::systems

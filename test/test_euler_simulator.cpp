@@ -5,8 +5,7 @@
 #include <uclv_systems_lib/discretization/forward_euler.hpp>
 
 int main()
-{
-  const int dim_state = 3;
+{const int dim_state = 3;
   const int dim_input = 2;
   const int dim_output = 1;
 
@@ -30,12 +29,17 @@ int main()
   x0 << 10, 0, 5;
 
   // define the conitnuous time linear state space system
-  uclv::systems::ContinuousTimeLinearStateSpace<dim_state, dim_input, dim_output, 1> continuous_time_system(A, B, C, D);
-  continuous_time_system.set_state(x0);
-  continuous_time_system.display();
+  auto continuous_time_system_ptr =
+      std::make_shared<uclv::systems::ContinuousTimeLinearStateSpace<dim_state, dim_input, dim_output>>(A, B, C, D);
+  continuous_time_system_ptr->set_state(x0);
+  continuous_time_system_ptr->display();
 
+  // discretized system
+
+  // Create the Forward Euler discretized system
   auto discretized_system =
-      std::make_shared<uclv::systems::ForwardEuler<dim_state, dim_input, dim_output>>(continuous_time_system, 0.1);
+      std::make_shared<uclv::systems::ForwardEuler<dim_state, dim_input, dim_output>>(continuous_time_system_ptr, 0.1);
+
   discretized_system->display();
 
   Eigen::Matrix<double, dim_input, 1> u_k;
@@ -62,10 +66,10 @@ int main()
   Eigen::Matrix<double, dim_output, dim_input> jacobu_output;
   Eigen::Matrix<double, dim_state, dim_input> jacobu;
 
-  continuous_time_system.jacobx_state_fcn(continuous_time_system.get_state(), u_k, jacobx);
-  continuous_time_system.jacobu_state_fcn(continuous_time_system.get_state(), u_k, jacobu);
-  continuous_time_system.jacobx_output_fcn(continuous_time_system.get_state(), u_k, jacobx_output);
-  continuous_time_system.jacobu_output_fcn(continuous_time_system.get_state(), u_k, jacobu_output);
+  continuous_time_system_ptr->jacobx_state_fcn(continuous_time_system_ptr->get_state(), u_k, jacobx);
+  continuous_time_system_ptr->jacobu_state_fcn(continuous_time_system_ptr->get_state(), u_k, jacobu);
+  continuous_time_system_ptr->jacobx_output_fcn(continuous_time_system_ptr->get_state(), u_k, jacobx_output);
+  continuous_time_system_ptr->jacobu_output_fcn(continuous_time_system_ptr->get_state(), u_k, jacobu_output);
 
   std::cout << "jacobx: \n" << jacobx << std::endl;
   std::cout << "jacobu: \n" << jacobu << std::endl;
