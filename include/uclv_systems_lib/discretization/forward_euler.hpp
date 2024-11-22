@@ -111,7 +111,7 @@ public:
 
   inline virtual void jacobx_state_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim1_state, dim2_state>>& x,
                                        const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k,
-                                       Eigen::Ref<Eigen::Matrix<double, dim1_state, dim1_state>>& out)
+                                       Eigen::Ref<Eigen::Matrix<double, dim1_state, dim1_state>> out)
   {
     (void)x;
     (void)u_k;
@@ -124,7 +124,7 @@ public:
   }
   inline virtual void jacobu_state_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim1_state, dim2_state>>& x,
                                        const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k,
-                                       Eigen::Ref<Eigen::Matrix<double, dim1_state, dim1_input>>& out)
+                                       Eigen::Ref<Eigen::Matrix<double, dim1_state, dim1_input>> out)
   {
     (void)x;
     (void)u_k;
@@ -137,7 +137,7 @@ public:
 
   inline virtual void jacobx_output_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim1_state, dim2_state>>& x,
                                         const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k,
-                                        Eigen::Ref<Eigen::Matrix<double, dim1_output, dim1_state>>& out)
+                                        Eigen::Ref<Eigen::Matrix<double, dim1_output, dim1_state>> out)
   {
     (void)x;
     (void)u_k;
@@ -150,7 +150,7 @@ public:
 
   inline virtual void jacobu_output_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim1_state, dim2_state>>& x,
                                         const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k,
-                                        Eigen::Ref<Eigen::Matrix<double, dim1_output, dim1_input>>& out)
+                                        Eigen::Ref<Eigen::Matrix<double, dim1_output, dim1_input>> out)
   {
     (void)x;
     (void)u_k;
