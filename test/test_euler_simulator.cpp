@@ -26,12 +26,11 @@ int main()
   // C << 0;
   // D << 0;
   Eigen::Matrix<double, dim_state, 1> x0;
-  x0 << 10, 0, 5;
+  x0 << 1, 0, 0;
 
   // define the conitnuous time linear state space system
   auto continuous_time_system_ptr =
       std::make_shared<uclv::systems::ContinuousTimeLinearStateSpace<dim_state, dim_input, dim_output>>(A, B, C, D);
-  continuous_time_system_ptr->set_state(x0);
   continuous_time_system_ptr->display();
 
   // discretized system
@@ -39,16 +38,16 @@ int main()
   // Create the Forward Euler discretized system
   auto discretized_system =
       std::make_shared<uclv::systems::ForwardEuler<dim_state, dim_input, dim_output>>(continuous_time_system_ptr, 0.1);
-
+  discretized_system->set_state(x0);
   discretized_system->display();
 
   Eigen::Matrix<double, dim_input, 1> u_k;
-  u_k << 1, -1;
+  u_k << 0, -0;
 
 
   uclv::systems::StateSpaceSystemSimulator<dim_state, dim_input, dim_output> simulator(discretized_system);
 
-  for (int i = 0; i < 100; i++)
+  for (int i = 0; i < 10; i++)
   {
     simulator.simulate(u_k);
   }

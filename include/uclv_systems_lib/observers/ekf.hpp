@@ -41,11 +41,16 @@ public:
 
   typedef ::uclv::systems::StateSpaceInterface<dim_state, dim_input, dim_output> StateSpaceInterface;
 
-
   ExtendedKalmanFilter(typename StateSpaceInterface::SharedPtr system_ptr,
                        const Eigen::Matrix<double, dim_state, dim_state>& W,
                        const Eigen::Matrix<double, dim_output, dim_output>& V)
-    : system_(system_ptr), W_(W), V_(V), P_(W), Identity_x_(Eigen::Matrix<double, dim_state, dim_state>::Identity())
+    : system_(system_ptr)
+    , W_(W)
+    , V_(V)
+    , P_(W)
+    , Identity_x_(Eigen::Matrix<double, dim_state, dim_state>::Identity())
+    , x_hat_k_k(Eigen::Matrix<double, dim_state, 1>::Zero())
+    , y_hat_k(Eigen::Matrix<double, dim_output, 1>::Zero())
   {
   }
 
@@ -67,21 +72,17 @@ public:
   void kf_apply(const Eigen::Ref<const Eigen::Matrix<double, dim_input, 1>>& u_k,
                 const Eigen::Ref<const Eigen::Matrix<double, dim_output, 1>>& y_k,
                 const Eigen::Matrix<double, dim_state, dim_state>& W_k,
-                const Eigen::Matrix<double, dim_output, dim_output>& V_k,
-                Eigen::Ref<Eigen::Matrix<double, dim_state, 1>> x_hat_k_k,
-                Eigen::Ref<Eigen::Matrix<double, dim_output, 1>> y_hat_k)
+                const Eigen::Matrix<double, dim_output, dim_output>& V_k)
   {
     setW(W_k);
     setV(V_k);
-    obs_apply(u_k, y_k, x_hat_k_k, y_hat_k);
+    obs_apply(u_k, y_k);
   }
 
   void obs_apply(const Eigen::Ref<const Eigen::Matrix<double, dim_input, 1>>& u_k,
-                 const Eigen::Ref<const Eigen::Matrix<double, dim_output, 1>>& y_k,
-                 Eigen::Ref<Eigen::Matrix<double, dim_state, 1>> x_hat_k_k,
-                 Eigen::Ref<Eigen::Matrix<double, dim_output, 1>> y_hat_k)
+                 const Eigen::Ref<const Eigen::Matrix<double, dim_output, 1>>& y_k)
   {
-    Eigen::Matrix<double, dim_state, 1> x_hat_k1_k1 = system_->get_state();
+    Eigen::Matrix<double, dim_state, 1> x_hat_k1_k1 = x_hat_k_k;
     Eigen::Matrix<double, dim_state, dim_state> P_k1_k1 = P_;
     Eigen::Matrix<double, dim_state, dim_state> W_k1 = W_;
     Eigen::Matrix<double, dim_output, dim_output> V_k = V_;
@@ -107,12 +108,44 @@ public:
     system_->output_fcn(x_hat_k_k, u_k, y_hat_k);
   }
 
+  Eigen::Matrix<double, dim_state, 1> get_state() const
+  {
+    return x_hat_k_k;
+  }
+  Eigen::Matrix<double, dim_output, 1> get_output() const
+  {
+    return y_hat_k;
+  }
+
+  void set_state(const Eigen::Ref<const Eigen::Matrix<double, dim_state, 1>>& x)
+  {
+    x_hat_k_k = x;
+  }
+
+  void reset()
+  {
+    P_ = W_;
+    x_hat_k_k.setZero();
+    y_hat_k.setZero();
+  }
+
+  void display()
+  {
+    std::cout << "\n" << std::endl;
+    std::cout << "Extended Kalman Filter\n" << std::endl;
+    std::cout << "W: \n" << W_ << std::endl;
+    std::cout << "V: \n" << V_ << std::endl;
+    system_->display();
+  }
+
 private:
   typename StateSpaceInterface::SharedPtr system_;
   Eigen::Matrix<double, dim_state, dim_state> W_;
   Eigen::Matrix<double, dim_output, dim_output> V_;
   Eigen::Matrix<double, dim_state, dim_state> P_;
   Eigen::Matrix<double, dim_state, dim_state> Identity_x_;
+  Eigen::Matrix<double, dim_state, 1> x_hat_k_k;
+  Eigen::Matrix<double, dim_output, 1> y_hat_k;
 };
 
 }  // namespace uclv::systems

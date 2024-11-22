@@ -73,12 +73,12 @@ public:
 
   inline virtual const Eigen::Matrix<double, dim1_state, dim2_state>& get_state() const
   {
-    return sys_->get_state();
+    return x_;
   }
 
   inline virtual const Eigen::Matrix<double, dim1_output, dim2_output>& get_output() const
   {
-    return sys_->get_output();
+    return y_;
   }
 
   inline virtual double get_sample_time() const
@@ -92,7 +92,7 @@ public:
 
   inline virtual void set_state(const Eigen::Ref<const Eigen::Matrix<double, dim1_state, dim2_state>>& x)
   {
-    sys_->set_state(x);
+    x_ = x;
   }
 
   /*==============================================*/
@@ -100,21 +100,21 @@ public:
   /*=============RUNNER===========================*/
   inline virtual void state_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim1_state, dim2_state>>& x,
                                 const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k,
-                                Eigen::Ref<Eigen::Matrix<double, dim1_state, dim2_state>> out)
+                                Eigen::Ref<Eigen::Matrix<double, dim1_state, dim2_state>> out) const
   {
     sys_->state_fcn(x, u_k, out);
     out = x + sample_time_ * out;
   }
   inline virtual void output_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim1_state, dim2_state>>& x,
                                  const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k,
-                                 Eigen::Ref<Eigen::Matrix<double, dim1_output, dim2_output>> out)
+                                 Eigen::Ref<Eigen::Matrix<double, dim1_output, dim2_output>> out) const
   {
     sys_->output_fcn(x, u_k, out);
   }
 
   inline virtual void jacobx_state_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim1_state, dim2_state>>& x,
                                        const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k,
-                                       Eigen::Ref<Eigen::Matrix<double, dim1_state, dim1_state>> out)
+                                       Eigen::Ref<Eigen::Matrix<double, dim1_state, dim1_state>> out) const
   {
     (void)x;
     (void)u_k;
@@ -127,7 +127,7 @@ public:
   }
   inline virtual void jacobu_state_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim1_state, dim2_state>>& x,
                                        const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k,
-                                       Eigen::Ref<Eigen::Matrix<double, dim1_state, dim1_input>> out)
+                                       Eigen::Ref<Eigen::Matrix<double, dim1_state, dim1_input>> out) const
   {
     (void)x;
     (void)u_k;
@@ -140,7 +140,7 @@ public:
 
   inline virtual void jacobx_output_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim1_state, dim2_state>>& x,
                                         const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k,
-                                        Eigen::Ref<Eigen::Matrix<double, dim1_output, dim1_state>> out)
+                                        Eigen::Ref<Eigen::Matrix<double, dim1_output, dim1_state>> out) const
   {
     (void)x;
     (void)u_k;
@@ -153,7 +153,7 @@ public:
 
   inline virtual void jacobu_output_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim1_state, dim2_state>>& x,
                                         const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k,
-                                        Eigen::Ref<Eigen::Matrix<double, dim1_output, dim1_input>> out)
+                                        Eigen::Ref<Eigen::Matrix<double, dim1_output, dim1_input>> out) const
   {
     (void)x;
     (void)u_k;
@@ -167,12 +167,14 @@ public:
   inline virtual const Eigen::Matrix<double, dim1_output, dim2_output>&
   step(const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k)
   {
-    Eigen::Matrix<double, dim1_state, dim2_state> x_;
+    Eigen::Matrix<double, dim1_state, dim2_state> x_tmp = x_;
+    state_fcn(x_, u_k, x_tmp);
+    x_ = x_tmp;
+    Eigen::Matrix<double, dim1_output, dim2_output> y_tmp = y_;
+    output_fcn(x_, u_k, y_tmp);
+    y_ = y_tmp;
 
-    state_fcn(sys_->get_state(), u_k, x_);
-    sys_->set_state(x_);
-
-    return get_output();
+    return y_;
   }
 
   /*==============================================*/
@@ -180,12 +182,15 @@ public:
   /*=============VARIE===========================*/
   inline virtual void reset()
   {
-    sys_->reset();
+    x_.setZero();
+    y_.setZero();
   }
 
   virtual void display() const
   {
     std::cout << "Forward Euler Discretizator" << std::endl;
+    std::cout << "Discretizator State: " << std::endl;
+    std::cout << x_ << std::endl;
     std::cout << "Sample Time: " << sample_time_ << std::endl;
     sys_->display();
   }
@@ -195,6 +200,8 @@ public:
 protected:
   typename ContinuousTimeStateSpaceInterface::SharedPtr sys_;
   double sample_time_;
+  Eigen::Matrix<double, dim1_state, dim2_state> x_;
+  Eigen::Matrix<double, dim1_output, dim2_output> y_;
 };
 
 }  // namespace uclv::systems
