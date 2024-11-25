@@ -102,8 +102,9 @@ public:
                                 const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k,
                                 Eigen::Ref<Eigen::Matrix<double, dim1_state, dim2_state>> out) const
   {
-    sys_->state_fcn(x, u_k, out);
-    out = x + sample_time_ * out;
+    Eigen::Matrix<double, dim1_state, dim2_state> x_k1;
+    sys_->state_fcn(x, u_k, x_k1);
+    out = x + sample_time_ * x_k1;
   }
   inline virtual void output_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim1_state, dim2_state>>& x,
                                  const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k,
@@ -167,13 +168,8 @@ public:
   inline virtual const Eigen::Matrix<double, dim1_output, dim2_output>&
   step(const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k)
   {
-    Eigen::Matrix<double, dim1_state, dim2_state> x_tmp = x_;
-    state_fcn(x_, u_k, x_tmp);
-    x_ = x_tmp;
-    Eigen::Matrix<double, dim1_output, dim2_output> y_tmp = y_;
-    output_fcn(x_, u_k, y_tmp);
-    y_ = y_tmp;
-
+    state_fcn(x_, u_k, x_);
+    output_fcn(x_, u_k, y_);
     return y_;
   }
 
