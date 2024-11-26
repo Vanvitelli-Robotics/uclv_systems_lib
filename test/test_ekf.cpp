@@ -32,7 +32,7 @@ int main()
 
   // define the conitnuous time linear state space system
   auto continuous_time_system_ptr =
-      std::make_shared<uclv::systems::ContinuousTimeLinearStateSpace<dim_state, dim_input, dim_output>>(A, B, C, D);
+      std::make_shared<uclv::systems::ContinuousTimeLinearStateSpace<dim_state, dim_input, dim_output>>(A, B, C, D,x0);
 
   // Create the Forward Euler discretized system
   auto discretized_system =
@@ -49,7 +49,7 @@ int main()
 
   // start from a different initial state
   Eigen::Matrix<double, dim_state, 1> x0_hat;
-  x0_hat << 0, 0;
+  x0_hat << -0, 0;
 
   uclv::systems::ExtendedKalmanFilter<dim_state, dim_input, dim_output> ekf(discretized_system, W, V);
   ekf.set_state(x0_hat);
@@ -71,11 +71,11 @@ int main()
     y_hat_k = ekf.get_output();
     std::cout << "Real state!\n" << std::endl;
 
-    std::cout << "x_k: " << discretized_system->get_state() << std::endl;
-    std::cout << "y_k: " << y_k << std::endl;
+    std::cout << "x_k: " << discretized_system->get_state().transpose() << std::endl;
+    std::cout << "y_k: " << y_k.transpose() << std::endl;
     std::cout << "Estimation result!\n" << std::endl;
-    std::cout << "x_hat_k_k: " << x_hat_k_k << std::endl;
-    std::cout << "y_hat_k: " << y_hat_k << std::endl;
+    std::cout << "x_hat_k_k: " << x_hat_k_k.transpose() << std::endl;
+    std::cout << "y_hat_k: " << y_hat_k.transpose() << std::endl;
   }
 
   ekf.display();

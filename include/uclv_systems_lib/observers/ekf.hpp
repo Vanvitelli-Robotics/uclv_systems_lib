@@ -44,18 +44,22 @@ public:
   ExtendedKalmanFilter(typename StateSpaceInterface::SharedPtr system_ptr,
                        const Eigen::Matrix<double, dim_state, dim_state>& W,
                        const Eigen::Matrix<double, dim_output, dim_output>& V)
-    : system_(system_ptr)
-    , W_(W)
-    , V_(V)
-    , P_(W)
-    , Identity_x_(Eigen::Matrix<double, dim_state, dim_state>::Identity())
-    , x_hat_k_k(Eigen::Matrix<double, dim_state, 1>::Zero())
-    , y_hat_k(Eigen::Matrix<double, dim_output, 1>::Zero())
+    : system_(system_ptr), W_(W), V_(V), P_(W)
   {
+    Identity_x_.resizeLike(P_);
+    Identity_x_.setIdentity();
+    x_hat_k_k_.resizeLike(system_ptr->get_state());
+    y_hat_k_.resizeLike(system_ptr->get_output());
   }
 
   ExtendedKalmanFilter(const ExtendedKalmanFilter& other)
-    : system_(other.system_->clone()), P_(other.P_), W_(other.W_), V_(other.V_), Identity_x_(other.Identity_x_)
+    : system_(other.system_->clone())
+    , P_(other.P_)
+    , W_(other.W_)
+    , V_(other.V_)
+    , Identity_x_(other.Identity_x_)
+    , x_hat_k_k_(other.x_hat_k_k_)
+    , y_hat_k_(other.y_hat_k_)
   {
   }
 
@@ -82,7 +86,7 @@ public:
   void obs_apply(const Eigen::Ref<const Eigen::Matrix<double, dim_input, 1>>& u_k,
                  const Eigen::Ref<const Eigen::Matrix<double, dim_output, 1>>& y_k)
   {
-    Eigen::Matrix<double, dim_state, 1> x_hat_k1_k1 = x_hat_k_k;
+    Eigen::Matrix<double, dim_state, 1> x_hat_k1_k1 = x_hat_k_k_;
     Eigen::Matrix<double, dim_state, dim_state> P_k1_k1 = P_;
     Eigen::Matrix<double, dim_state, dim_state> W_k1 = W_;
     Eigen::Matrix<double, dim_output, dim_output> V_k = V_;
@@ -103,30 +107,30 @@ public:
     system_->jacobx_output_fcn(x_hat_k_k1, u_k, H_k);
     Eigen::Matrix<double, dim_output, dim_output> S_k = H_k * P_k_k1 * H_k.transpose() + V_k;
     Eigen::Matrix<double, dim_state, dim_output> K_k = P_k_k1 * H_k.transpose() * S_k.inverse();
-    x_hat_k_k = x_hat_k_k1 + K_k * y_tilde_k;
+    x_hat_k_k_ = x_hat_k_k1 + K_k * y_tilde_k;
     P_ = (Identity_x_ - K_k * H_k) * P_k_k1;
-    system_->output_fcn(x_hat_k_k, u_k, y_hat_k);
+    system_->output_fcn(x_hat_k_k_, u_k, y_hat_k_);
   }
 
   Eigen::Matrix<double, dim_state, 1> get_state() const
   {
-    return x_hat_k_k;
+    return x_hat_k_k_;
   }
   Eigen::Matrix<double, dim_output, 1> get_output() const
   {
-    return y_hat_k;
+    return y_hat_k_;
   }
 
   void set_state(const Eigen::Ref<const Eigen::Matrix<double, dim_state, 1>>& x)
   {
-    x_hat_k_k = x;
+    x_hat_k_k_ = x;
   }
 
   void reset()
   {
     P_ = W_;
-    x_hat_k_k.setZero();
-    y_hat_k.setZero();
+    x_hat_k_k_.setZero();
+    y_hat_k_.setZero();
   }
 
   void display()
@@ -144,8 +148,8 @@ private:
   Eigen::Matrix<double, dim_output, dim_output> V_;
   Eigen::Matrix<double, dim_state, dim_state> P_;
   Eigen::Matrix<double, dim_state, dim_state> Identity_x_;
-  Eigen::Matrix<double, dim_state, 1> x_hat_k_k;
-  Eigen::Matrix<double, dim_output, 1> y_hat_k;
+  Eigen::Matrix<double, dim_state, 1> x_hat_k_k_;
+  Eigen::Matrix<double, dim_output, 1> y_hat_k_;
 };
 
 }  // namespace uclv::systems

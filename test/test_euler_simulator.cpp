@@ -30,7 +30,7 @@ int main()
 
   // define the conitnuous time linear state space system
   auto continuous_time_system_ptr =
-      std::make_shared<uclv::systems::ContinuousTimeLinearStateSpace<dim_state, dim_input, dim_output>>(A, B, C, D);
+      std::make_shared<uclv::systems::ContinuousTimeLinearStateSpace<dim_state, dim_input, dim_output>>(A, B, C, D,x0);
   continuous_time_system_ptr->display();
 
   // discretized system

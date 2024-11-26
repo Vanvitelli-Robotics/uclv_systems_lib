@@ -54,6 +54,8 @@ public:
   ForwardEuler(typename ContinuousTimeStateSpaceInterface::SharedPtr system_ptr, double sample_time)
     : sys_(system_ptr), sample_time_(sample_time)
   {
+    x_.resizeLike(sys_->get_state());
+    y_.resizeLike(sys_->get_output());
   }
 
   //! Copy Constructor
@@ -100,7 +102,7 @@ public:
   /*=============RUNNER===========================*/
   inline virtual void state_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim1_state, dim2_state>>& x,
                                 const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k,
-                                Eigen::Ref<Eigen::Matrix<double, dim1_state, dim2_state>> out) const
+                                Eigen::Matrix<double, dim1_state, dim2_state>& out) const
   {
     Eigen::Matrix<double, dim1_state, dim2_state> x_k1;
     sys_->state_fcn(x, u_k, x_k1);
@@ -108,14 +110,14 @@ public:
   }
   inline virtual void output_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim1_state, dim2_state>>& x,
                                  const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k,
-                                 Eigen::Ref<Eigen::Matrix<double, dim1_output, dim2_output>> out) const
+                                 Eigen::Matrix<double, dim1_output, dim2_output>& out) const
   {
     sys_->output_fcn(x, u_k, out);
   }
 
   inline virtual void jacobx_state_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim1_state, dim2_state>>& x,
                                        const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k,
-                                       Eigen::Ref<Eigen::Matrix<double, dim1_state, dim1_state>> out) const
+                                       Eigen::Matrix<double, dim1_state, dim1_state>& out) const
   {
     (void)x;
     (void)u_k;
@@ -128,7 +130,7 @@ public:
   }
   inline virtual void jacobu_state_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim1_state, dim2_state>>& x,
                                        const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k,
-                                       Eigen::Ref<Eigen::Matrix<double, dim1_state, dim1_input>> out) const
+                                       Eigen::Matrix<double, dim1_state, dim1_input>& out) const
   {
     (void)x;
     (void)u_k;
@@ -141,7 +143,7 @@ public:
 
   inline virtual void jacobx_output_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim1_state, dim2_state>>& x,
                                         const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k,
-                                        Eigen::Ref<Eigen::Matrix<double, dim1_output, dim1_state>> out) const
+                                        Eigen::Matrix<double, dim1_output, dim1_state>& out) const
   {
     (void)x;
     (void)u_k;
@@ -154,7 +156,7 @@ public:
 
   inline virtual void jacobu_output_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim1_state, dim2_state>>& x,
                                         const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k,
-                                        Eigen::Ref<Eigen::Matrix<double, dim1_output, dim1_input>> out) const
+                                        Eigen::Matrix<double, dim1_output, dim1_input>& out) const
   {
     (void)x;
     (void)u_k;
