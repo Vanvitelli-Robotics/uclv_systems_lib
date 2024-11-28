@@ -58,6 +58,15 @@ public:
     y_.resizeLike(sys_->get_output());
   }
 
+  ForwardEuler(typename ContinuousTimeStateSpaceInterface::SharedPtr system_ptr, double sample_time, const Eigen::Ref<const Eigen::Matrix<double, dim1_state, 1>>& x)
+    : sys_(system_ptr), sample_time_(sample_time)
+  {
+    x_.resizeLike(sys_->get_state());
+    x_ = x;
+    y_.resizeLike(sys_->get_output());
+    y_ = sys_->get_output();
+  }
+
   //! Copy Constructor
   ForwardEuler(const ForwardEuler& sys) = default;
 
