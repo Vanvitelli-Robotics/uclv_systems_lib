@@ -63,6 +63,11 @@ public:
   {
   }
 
+  void setP(const Eigen::Matrix<double, dim_state, dim_state>& P)
+  {
+    P_ = P;
+  }
+
   void setW(const Eigen::Matrix<double, dim_state, dim_state>& W)
   {
     W_ = W;
@@ -86,16 +91,16 @@ public:
   void obs_apply(const Eigen::Ref<const Eigen::Matrix<double, dim_input, 1>>& u_k,
                  const Eigen::Ref<const Eigen::Matrix<double, dim_output, 1>>& y_k)
   {
-    Eigen::Matrix<double, dim_state, 1> x_hat_k1_k1 = x_hat_k_k_;
+    // Eigen::Matrix<double, dim_state, 1> x_hat_k1_k1 = x_hat_k_k_;
     Eigen::Matrix<double, dim_state, dim_state> P_k1_k1 = P_;
     Eigen::Matrix<double, dim_state, dim_state> W_k1 = W_;
     Eigen::Matrix<double, dim_output, dim_output> V_k = V_;
 
     // PREDICT
     Eigen::Matrix<double, dim_state, 1> x_hat_k_k1;
-    system_->state_fcn(x_hat_k1_k1, u_k, x_hat_k_k1);
+    system_->state_fcn(x_hat_k_k_, u_k, x_hat_k_k1);
     Eigen::Matrix<double, dim_state, dim_state> F_k1;
-    system_->jacobx_state_fcn(x_hat_k1_k1, u_k, F_k1);
+    system_->jacobx_state_fcn(x_hat_k_k_, u_k, F_k1);
     Eigen::Matrix<double, dim_state, dim_state> P_k_k1 = F_k1 * P_k1_k1 * F_k1.transpose() + W_k1;
 
     // UPDATE
