@@ -43,8 +43,10 @@ public:
 
   ExtendedKalmanFilter(typename StateSpaceInterface::SharedPtr system_ptr,
                        const Eigen::Matrix<double, dim_state, dim_state>& W,
-                       const Eigen::Matrix<double, dim_output, dim_output>& V)
-    : system_(system_ptr), W_(W), V_(V), P_(W)
+                       const Eigen::Matrix<double, dim_output, dim_output>& V,
+                       Eigen::Matrix<double, dim_state, 1> (*normalization_fun)(const Eigen::Matrix<double, dim_state, 1>&) = nullptr)
+    : system_(system_ptr), W_(W), V_(V), P_(W),
+      normalization_fun_(normalization_fun)
   {
     Identity_x_.resizeLike(P_);
     Identity_x_.setIdentity();
@@ -91,17 +93,18 @@ public:
   void obs_apply(const Eigen::Ref<const Eigen::Matrix<double, dim_input, 1>>& u_k,
                  const Eigen::Ref<const Eigen::Matrix<double, dim_output, 1>>& y_k)
   {
-    // Eigen::Matrix<double, dim_state, 1> x_hat_k1_k1 = x_hat_k_k_;
-    Eigen::Matrix<double, dim_state, dim_state> P_k1_k1 = P_;
-    Eigen::Matrix<double, dim_state, dim_state> W_k1 = W_;
-    Eigen::Matrix<double, dim_output, dim_output> V_k = V_;
-
     // PREDICT
     Eigen::Matrix<double, dim_state, 1> x_hat_k_k1;
     system_->state_fcn(x_hat_k_k_, u_k, x_hat_k_k1);
+
+    if (normalization_fun_ != nullptr)
+    {
+      x_hat_k_k1 = normalization_fun_(x_hat_k_k1);
+    }
+
     Eigen::Matrix<double, dim_state, dim_state> F_k1;
     system_->jacobx_state_fcn(x_hat_k_k_, u_k, F_k1);
-    Eigen::Matrix<double, dim_state, dim_state> P_k_k1 = F_k1 * P_k1_k1 * F_k1.transpose() + W_k1;
+    Eigen::Matrix<double, dim_state, dim_state> P_k_k1 = F_k1 * P_ * F_k1.transpose() + W_;
 
     // UPDATE
     Eigen::Matrix<double, dim_output, 1> y_hat_k_k1;
@@ -110,9 +113,14 @@ public:
 
     Eigen::Matrix<double, dim_output, dim_state> H_k;
     system_->jacobx_output_fcn(x_hat_k_k1, u_k, H_k);
-    Eigen::Matrix<double, dim_output, dim_output> S_k = H_k * P_k_k1 * H_k.transpose() + V_k;
+    Eigen::Matrix<double, dim_output, dim_output> S_k = H_k * P_k_k1 * H_k.transpose() + V_;
     Eigen::Matrix<double, dim_state, dim_output> K_k = P_k_k1 * H_k.transpose() * S_k.inverse();
     x_hat_k_k_ = x_hat_k_k1 + K_k * y_tilde_k;
+
+    if (normalization_fun_ != nullptr)
+    {
+      x_hat_k_k_ = normalization_fun_(x_hat_k_k_);
+    }
     P_ = (Identity_x_ - K_k * H_k) * P_k_k1;
     system_->output_fcn(x_hat_k_k_, u_k, y_hat_k_);
   }
@@ -155,6 +163,7 @@ private:
   Eigen::Matrix<double, dim_state, dim_state> Identity_x_;
   Eigen::Matrix<double, dim_state, 1> x_hat_k_k_;
   Eigen::Matrix<double, dim_output, 1> y_hat_k_;
+  Eigen::Matrix<double, dim_state, 1> (*normalization_fun_)(const Eigen::Matrix<double, dim_state, 1>&) = nullptr;
 };
 
 }  // namespace uclv::systems
