@@ -5,7 +5,7 @@
 namespace uclv::systems
 {
 
-template <int dim1_input, int dim1_output, int dim2_input = 1, int dim2_output = 1>
+template <typename Scalar_t, int dim1_input, int dim1_output, int dim2_input = 1, int dim2_output = 1>
 class SystemSimulator
 {
 public:
@@ -15,11 +15,11 @@ public:
   typedef std::weak_ptr<const SystemSimulator> ConstWeakPtr;
   typedef std::unique_ptr<SystemSimulator> UniquePtr;
 
-  typedef ::uclv::systems::SystemInterface<dim1_input, dim1_output, dim2_input, dim2_output> SystemInterface;
+  typedef ::uclv::systems::SystemInterface<Scalar_t, dim1_input, dim1_output, dim2_input, dim2_output> SystemInterface;
 
 protected:
-  std::vector<Eigen::Matrix<double, dim1_input, dim2_input>> input_history_;
-  std::vector<Eigen::Matrix<double, dim1_output, dim2_output>> output_history_;
+  std::vector<Eigen::Matrix<Scalar_t, dim1_input, dim2_input>> input_history_;
+  std::vector<Eigen::Matrix<Scalar_t, dim1_output, dim2_output>> output_history_;
 
 public:
   typename SystemInterface::SharedPtr system;
@@ -41,24 +41,24 @@ public:
     output_history_.reserve(size);
   }
 
-  const std::vector<Eigen::Matrix<double, dim1_input, dim2_input>>& get_input_history() const
+  const std::vector<Eigen::Matrix<Scalar_t, dim1_input, dim2_input>>& get_input_history() const
   {
     return input_history_;
   }
 
-  const std::vector<Eigen::Matrix<double, dim1_output, dim2_output>>& get_output_history() const
+  const std::vector<Eigen::Matrix<Scalar_t, dim1_output, dim2_output>>& get_output_history() const
   {
     return output_history_;
   }
 
-  virtual inline void simulate(const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k)
+  virtual inline void simulate(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_input, dim2_input>>& u_k)
   {
     assert(system != nullptr && "[SystemSimulator] System not set");
     input_history_.push_back(u_k);
     output_history_.push_back(system->step(u_k));
   }
 
-  inline void simulate(const std::vector<Eigen::Matrix<double, dim1_input, dim2_input>>& input_vector)
+  inline void simulate(const std::vector<Eigen::Matrix<Scalar_t, dim1_input, dim2_input>>& input_vector)
   {
     for (const auto& u_k : input_vector)
     {
@@ -66,7 +66,7 @@ public:
     }
   }
 
-  inline void simulate(const std::vector<Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>>& input_vector)
+  inline void simulate(const std::vector<Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_input, dim2_input>>>& input_vector)
   {
     for (const auto& u_k : input_vector)
     {
@@ -74,7 +74,7 @@ public:
     }
   }
 
-  inline void simulate(const std::vector<Eigen::Ref<Eigen::Matrix<double, dim1_input, dim2_input>>>& input_vector)
+  inline void simulate(const std::vector<Eigen::Ref<Eigen::Matrix<Scalar_t, dim1_input, dim2_input>>>& input_vector)
   {
     for (const auto& u_k : input_vector)
     {

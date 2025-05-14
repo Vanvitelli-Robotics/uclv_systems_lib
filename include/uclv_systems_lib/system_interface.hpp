@@ -32,7 +32,7 @@
 namespace uclv::systems
 {
 
-template <int dim1_input, int dim1_output, int dim2_input = 1, int dim2_output = 1>
+template <typename Scalar_t, int dim1_input, int dim1_output, int dim2_input = 1, int dim2_output = 1>
 class SystemInterface
 {
 public:
@@ -60,7 +60,7 @@ public:
 
   /*=============GETTER===========================*/
 
-  inline virtual const Eigen::Matrix<double, dim1_output, dim2_output>& get_output() const = 0;
+  inline virtual const Eigen::Matrix<Scalar_t, dim1_output, dim2_output>& get_output() const = 0;
 
   /*==============================================*/
 
@@ -70,8 +70,8 @@ public:
 
   /*=============RUNNER===========================*/
 
-  inline virtual const Eigen::Matrix<double, dim1_output, dim2_output>&
-  step(const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k) = 0;
+  inline virtual const Eigen::Matrix<Scalar_t, dim1_output, dim2_output>&
+  step(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_input, dim2_input>>& u_k) = 0;
 
   /*==============================================*/
 

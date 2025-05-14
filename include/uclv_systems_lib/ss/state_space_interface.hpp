@@ -30,8 +30,8 @@
 namespace uclv::systems
 {
 
-template <int dim1_state, int dim1_input, int dim1_output, int dim2_state = 1, int dim2_input = 1, int dim2_output = 1>
-class StateSpaceInterface : public SystemInterface<dim1_input, dim1_output, dim2_input, dim2_output>
+template <typename Scalar_t, int dim1_state, int dim1_input, int dim1_output, int dim2_state = 1, int dim2_input = 1, int dim2_output = 1>
+class StateSpaceInterface : public SystemInterface<Scalar_t, dim1_input, dim1_output, dim2_input, dim2_output>
 {
 public:
   typedef std::shared_ptr<StateSpaceInterface> SharedPtr;
@@ -58,34 +58,34 @@ public:
 
   /*=============GETTER===========================*/
 
-  inline virtual const Eigen::Matrix<double, dim1_state, dim2_state>& get_state() const = 0;
+  inline virtual const Eigen::Matrix<Scalar_t, dim1_state, dim2_state>& get_state() const = 0;
 
-  inline virtual const Eigen::Matrix<double, dim1_output, dim2_output>& get_output() const = 0;
+  inline virtual const Eigen::Matrix<Scalar_t, dim1_output, dim2_output>& get_output() const = 0;
 
   /*==============================================*/
 
   /*=============SETTER===========================*/
 
-  inline virtual void set_state(const Eigen::Ref<const Eigen::Matrix<double, dim1_state, dim2_state>>& x) = 0;
+  inline virtual void set_state(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_state, dim2_state>>& x) = 0;
 
   /*==============================================*/
 
   /*=============RUNNER===========================*/
 
   //! State function
-  inline virtual void state_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim1_state, dim2_state>>& x,
-                                const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k,
-                                Eigen::Matrix<double, dim1_state, dim2_state>& out) const = 0;
+  inline virtual void state_fcn(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_state, dim2_state>>& x,
+                                const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_input, dim2_input>>& u_k,
+                                Eigen::Matrix<Scalar_t, dim1_state, dim2_state>& out) const = 0;
 
   //! Output function
-  inline virtual void output_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim1_state, dim2_state>>& x,
-                                 const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k,
-                                 Eigen::Matrix<double, dim1_output, dim2_output>& out) const = 0;
+  inline virtual void output_fcn(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_state, dim2_state>>& x,
+                                 const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_input, dim2_input>>& u_k,
+                                 Eigen::Matrix<Scalar_t, dim1_output, dim2_output>& out) const = 0;
 
   //! Jacobian of the state function with respect to the state
-  inline virtual void jacobx_state_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim1_state, dim2_state>>& x,
-                                       const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k,
-                                       Eigen::Matrix<double, dim1_state, dim1_state>& out) const
+  inline virtual void jacobx_state_fcn(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_state, dim2_state>>& x,
+                                       const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_input, dim2_input>>& u_k,
+                                       Eigen::Matrix<Scalar_t, dim1_state, dim1_state>& out) const
   {
     (void)x;
     (void)u_k;
@@ -97,9 +97,9 @@ public:
   }
 
   //! Jacobian of the state function with respect to the input
-  inline virtual void jacobu_state_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim1_state, dim2_state>>& x,
-                                       const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k,
-                                       Eigen::Matrix<double, dim1_state, dim1_input>& out) const
+  inline virtual void jacobu_state_fcn(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_state, dim2_state>>& x,
+                                       const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_input, dim2_input>>& u_k,
+                                       Eigen::Matrix<Scalar_t, dim1_state, dim1_input>& out) const
   {
     (void)x;
     (void)u_k;
@@ -111,9 +111,9 @@ public:
   }
 
   //! Jacobian of the output function with respect to the state
-  inline virtual void jacobx_output_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim1_state, dim2_state>>& x,
-                                        const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k,
-                                        Eigen::Matrix<double, dim1_output, dim1_state>& out) const
+  inline virtual void jacobx_output_fcn(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_state, dim2_state>>& x,
+                                        const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_input, dim2_input>>& u_k,
+                                        Eigen::Matrix<Scalar_t, dim1_output, dim1_state>& out) const
   {
     (void)x;
     (void)u_k;
@@ -125,9 +125,9 @@ public:
   }
 
   // Jacobian of the output function with respect to the input
-  inline virtual void jacobu_output_fcn(const Eigen::Ref<const Eigen::Matrix<double, dim1_state, dim2_state>>& x,
-                                        const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k,
-                                        Eigen::Matrix<double, dim1_output, dim1_input>& out) const
+  inline virtual void jacobu_output_fcn(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_state, dim2_state>>& x,
+                                        const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_input, dim2_input>>& u_k,
+                                        Eigen::Matrix<Scalar_t, dim1_output, dim1_input>& out) const
   {
     (void)x;
     (void)u_k;
@@ -138,8 +138,8 @@ public:
     }
   }
 
-  inline virtual const Eigen::Matrix<double, dim1_output, dim2_output>&
-  step(const Eigen::Ref<const Eigen::Matrix<double, dim1_input, dim2_input>>& u_k) = 0;
+  inline virtual const Eigen::Matrix<Scalar_t, dim1_output, dim2_output>&
+  step(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_input, dim2_input>>& u_k) = 0;
 
   /*==============================================*/
 

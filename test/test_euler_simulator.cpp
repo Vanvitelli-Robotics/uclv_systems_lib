@@ -3,6 +3,7 @@
 #include <uclv_systems_lib/ss/linear_state_space.hpp>
 #include <uclv_systems_lib/continuous_time/continuous_time_linear_state_space.hpp>
 #include <uclv_systems_lib/discretization/forward_euler.hpp>
+#define SCALAR_TYPE double
 
 int main()
 {const int dim_state = 3;
@@ -10,10 +11,10 @@ int main()
   const int dim_output = 1;
 
   // define A, B, C, D matrices
-  Eigen::Matrix<double, dim_state, dim_state> A;
-  Eigen::Matrix<double, dim_state, dim_input> B;
-  Eigen::Matrix<double, dim_output, dim_state> C;
-  Eigen::Matrix<double, dim_output, dim_input> D;
+  Eigen::Matrix<SCALAR_TYPE, dim_state, dim_state> A;
+  Eigen::Matrix<SCALAR_TYPE, dim_state, dim_input> B;
+  Eigen::Matrix<SCALAR_TYPE, dim_output, dim_state> C;
+  Eigen::Matrix<SCALAR_TYPE, dim_output, dim_input> D;
 
   A << -1, 0, 0, 0, -1, 0, 0, 0, -1;
   B << 1, 0, 0, 1, 0, 0;
@@ -25,27 +26,27 @@ int main()
   // B << 0;
   // C << 0;
   // D << 0;
-  Eigen::Matrix<double, dim_state, 1> x0;
+  Eigen::Matrix<SCALAR_TYPE, dim_state, 1> x0;
   x0 << 1, 0, 0;
 
   // define the conitnuous time linear state space system
   auto continuous_time_system_ptr =
-      std::make_shared<uclv::systems::ContinuousTimeLinearStateSpace<dim_state, dim_input, dim_output>>(A, B, C, D,x0);
+      std::make_shared<uclv::systems::ContinuousTimeLinearStateSpace<SCALAR_TYPE,dim_state, dim_input, dim_output>>(A, B, C, D,x0);
   continuous_time_system_ptr->display();
 
   // discretized system
 
   // Create the Forward Euler discretized system
   auto discretized_system =
-      std::make_shared<uclv::systems::ForwardEuler<dim_state, dim_input, dim_output>>(continuous_time_system_ptr, 0.1);
+      std::make_shared<uclv::systems::ForwardEuler<SCALAR_TYPE,dim_state, dim_input, dim_output>>(continuous_time_system_ptr, 0.1);
   discretized_system->set_state(x0);
   discretized_system->display();
 
-  Eigen::Matrix<double, dim_input, 1> u_k;
+  Eigen::Matrix<SCALAR_TYPE, dim_input, 1> u_k;
   u_k << 0, -0;
 
 
-  uclv::systems::StateSpaceSystemSimulator<dim_state, dim_input, dim_output> simulator(discretized_system);
+  uclv::systems::StateSpaceSystemSimulator<SCALAR_TYPE,dim_state, dim_input, dim_output> simulator(discretized_system);
 
   for (int i = 0; i < 10; i++)
   {
@@ -60,10 +61,10 @@ int main()
 
 
   // test jacobian functions
-  Eigen::Matrix<double, dim_state, dim_state> jacobx;
-  Eigen::Matrix<double, dim_output, dim_state> jacobx_output;
-  Eigen::Matrix<double, dim_output, dim_input> jacobu_output;
-  Eigen::Matrix<double, dim_state, dim_input> jacobu;
+  Eigen::Matrix<SCALAR_TYPE, dim_state, dim_state> jacobx;
+  Eigen::Matrix<SCALAR_TYPE, dim_output, dim_state> jacobx_output;
+  Eigen::Matrix<SCALAR_TYPE, dim_output, dim_input> jacobu_output;
+  Eigen::Matrix<SCALAR_TYPE, dim_state, dim_input> jacobu;
 
   continuous_time_system_ptr->jacobx_state_fcn(continuous_time_system_ptr->get_state(), u_k, jacobx);
   continuous_time_system_ptr->jacobu_state_fcn(continuous_time_system_ptr->get_state(), u_k, jacobu);

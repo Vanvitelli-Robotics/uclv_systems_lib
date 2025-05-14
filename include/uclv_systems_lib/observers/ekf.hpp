@@ -29,7 +29,7 @@
 namespace uclv::systems
 {
 
-template <int dim_state, int dim_input, int dim_output>
+template <typename Scalar_t, int dim_state, int dim_input, int dim_output>
 class ExtendedKalmanFilter
 {
 public:
@@ -39,12 +39,12 @@ public:
   typedef std::weak_ptr<const ExtendedKalmanFilter> ConstWeakPtr;
   typedef std::unique_ptr<ExtendedKalmanFilter> UniquePtr;
 
-  typedef ::uclv::systems::StateSpaceInterface<dim_state, dim_input, dim_output> StateSpaceInterface;
+  typedef ::uclv::systems::StateSpaceInterface<Scalar_t, dim_state, dim_input, dim_output> StateSpaceInterface;
 
   ExtendedKalmanFilter(typename StateSpaceInterface::SharedPtr system_ptr,
-                       const Eigen::Matrix<double, dim_state, dim_state>& W,
-                       const Eigen::Matrix<double, dim_output, dim_output>& V,
-                       Eigen::Matrix<double, dim_state, 1> (*normalization_fun)(const Eigen::Matrix<double, dim_state, 1>&) = nullptr)
+                       const Eigen::Matrix<Scalar_t, dim_state, dim_state>& W,
+                       const Eigen::Matrix<Scalar_t, dim_output, dim_output>& V,
+                       Eigen::Matrix<Scalar_t, dim_state, 1> (*normalization_fun)(const Eigen::Matrix<Scalar_t, dim_state, 1>&) = nullptr)
     : system_(system_ptr), W_(W), V_(V), P_(W),
       normalization_fun_(normalization_fun)
   {
@@ -65,36 +65,36 @@ public:
   {
   }
 
-  void setP(const Eigen::Matrix<double, dim_state, dim_state>& P)
+  void setP(const Eigen::Matrix<Scalar_t, dim_state, dim_state>& P)
   {
     P_ = P;
   }
 
-  void setW(const Eigen::Matrix<double, dim_state, dim_state>& W)
+  void setW(const Eigen::Matrix<Scalar_t, dim_state, dim_state>& W)
   {
     W_ = W;
   }
 
-  void setV(const Eigen::Matrix<double, dim_output, dim_output>& V)
+  void setV(const Eigen::Matrix<Scalar_t, dim_output, dim_output>& V)
   {
     V_ = V;
   }
 
-  void kf_apply(const Eigen::Ref<const Eigen::Matrix<double, dim_input, 1>>& u_k,
-                const Eigen::Ref<const Eigen::Matrix<double, dim_output, 1>>& y_k,
-                const Eigen::Matrix<double, dim_state, dim_state>& W_k,
-                const Eigen::Matrix<double, dim_output, dim_output>& V_k)
+  void kf_apply(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim_input, 1>>& u_k,
+                const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim_output, 1>>& y_k,
+                const Eigen::Matrix<Scalar_t, dim_state, dim_state>& W_k,
+                const Eigen::Matrix<Scalar_t, dim_output, dim_output>& V_k)
   {
     setW(W_k);
     setV(V_k);
     obs_apply(u_k, y_k);
   }
 
-  void obs_apply(const Eigen::Ref<const Eigen::Matrix<double, dim_input, 1>>& u_k,
-                 const Eigen::Ref<const Eigen::Matrix<double, dim_output, 1>>& y_k)
+  void obs_apply(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim_input, 1>>& u_k,
+                 const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim_output, 1>>& y_k)
   {
     // PREDICT
-    Eigen::Matrix<double, dim_state, 1> x_hat_k_k1;
+    Eigen::Matrix<Scalar_t, dim_state, 1> x_hat_k_k1;
     system_->state_fcn(x_hat_k_k_, u_k, x_hat_k_k1);
 
     if (normalization_fun_ != nullptr)
@@ -102,19 +102,19 @@ public:
       x_hat_k_k1 = normalization_fun_(x_hat_k_k1);
     }
 
-    Eigen::Matrix<double, dim_state, dim_state> F_k1;
+    Eigen::Matrix<Scalar_t, dim_state, dim_state> F_k1;
     system_->jacobx_state_fcn(x_hat_k_k_, u_k, F_k1);
-    Eigen::Matrix<double, dim_state, dim_state> P_k_k1 = F_k1 * P_ * F_k1.transpose() + W_;
+    Eigen::Matrix<Scalar_t, dim_state, dim_state> P_k_k1 = F_k1 * P_ * F_k1.transpose() + W_;
 
     // UPDATE
-    Eigen::Matrix<double, dim_output, 1> y_hat_k_k1;
+    Eigen::Matrix<Scalar_t, dim_output, 1> y_hat_k_k1;
     system_->output_fcn(x_hat_k_k1, u_k, y_hat_k_k1);
-    Eigen::Matrix<double, dim_output, 1> y_tilde_k = y_k - y_hat_k_k1;
+    Eigen::Matrix<Scalar_t, dim_output, 1> y_tilde_k = y_k - y_hat_k_k1;
 
-    Eigen::Matrix<double, dim_output, dim_state> H_k;
+    Eigen::Matrix<Scalar_t, dim_output, dim_state> H_k;
     system_->jacobx_output_fcn(x_hat_k_k1, u_k, H_k);
-    Eigen::Matrix<double, dim_output, dim_output> S_k = H_k * P_k_k1 * H_k.transpose() + V_;
-    Eigen::Matrix<double, dim_state, dim_output> K_k = P_k_k1 * H_k.transpose() * S_k.inverse();
+    Eigen::Matrix<Scalar_t, dim_output, dim_output> S_k = H_k * P_k_k1 * H_k.transpose() + V_;
+    Eigen::Matrix<Scalar_t, dim_state, dim_output> K_k = P_k_k1 * H_k.transpose() * S_k.inverse();
     x_hat_k_k_ = x_hat_k_k1 + K_k * y_tilde_k;
 
     if (normalization_fun_ != nullptr)
@@ -125,16 +125,16 @@ public:
     system_->output_fcn(x_hat_k_k_, u_k, y_hat_k_);
   }
 
-  Eigen::Matrix<double, dim_state, 1> get_state() const
+  Eigen::Matrix<Scalar_t, dim_state, 1> get_state() const
   {
     return x_hat_k_k_;
   }
-  Eigen::Matrix<double, dim_output, 1> get_output() const
+  Eigen::Matrix<Scalar_t, dim_output, 1> get_output() const
   {
     return y_hat_k_;
   }
 
-  void set_state(const Eigen::Ref<const Eigen::Matrix<double, dim_state, 1>>& x)
+  void set_state(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim_state, 1>>& x)
   {
     x_hat_k_k_ = x;
   }
@@ -157,13 +157,13 @@ public:
 
 private:
   typename StateSpaceInterface::SharedPtr system_;
-  Eigen::Matrix<double, dim_state, dim_state> W_;
-  Eigen::Matrix<double, dim_output, dim_output> V_;
-  Eigen::Matrix<double, dim_state, dim_state> P_;
-  Eigen::Matrix<double, dim_state, dim_state> Identity_x_;
-  Eigen::Matrix<double, dim_state, 1> x_hat_k_k_;
-  Eigen::Matrix<double, dim_output, 1> y_hat_k_;
-  Eigen::Matrix<double, dim_state, 1> (*normalization_fun_)(const Eigen::Matrix<double, dim_state, 1>&) = nullptr;
+  Eigen::Matrix<Scalar_t, dim_state, dim_state> W_;
+  Eigen::Matrix<Scalar_t, dim_output, dim_output> V_;
+  Eigen::Matrix<Scalar_t, dim_state, dim_state> P_;
+  Eigen::Matrix<Scalar_t, dim_state, dim_state> Identity_x_;
+  Eigen::Matrix<Scalar_t, dim_state, 1> x_hat_k_k_;
+  Eigen::Matrix<Scalar_t, dim_output, 1> y_hat_k_;
+  Eigen::Matrix<Scalar_t, dim_state, 1> (*normalization_fun_)(const Eigen::Matrix<Scalar_t, dim_state, 1>&) = nullptr;
 };
 
 }  // namespace uclv::systems

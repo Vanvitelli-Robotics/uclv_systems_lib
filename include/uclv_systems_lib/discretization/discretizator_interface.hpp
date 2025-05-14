@@ -31,9 +31,9 @@
 namespace uclv::systems
 {
 
-template <int dim1_state, int dim1_input, int dim1_output, int dim2_state = 1, int dim2_input = 1, int dim2_output = 1>
+template <typename Scalar_t, int dim1_state, int dim1_input, int dim1_output, int dim2_state = 1, int dim2_input = 1, int dim2_output = 1>
 class DiscretizatorInterface
-  : public StateSpaceInterface<dim1_state, dim1_input, dim1_output, dim2_state, dim2_input, dim2_output>
+  : public StateSpaceInterface<Scalar_t, dim1_state, dim1_input, dim1_output, dim2_state, dim2_input, dim2_output>
 {
 public:
   typedef std::shared_ptr<DiscretizatorInterface> SharedPtr;

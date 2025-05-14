@@ -4,6 +4,7 @@
 #include <uclv_systems_lib/continuous_time/continuous_time_linear_state_space.hpp>
 #include <uclv_systems_lib/discretization/forward_euler.hpp>
 #include <uclv_systems_lib/observers/ekf.hpp>
+#define SCALAR_TYPE double
 
 int main()
 {
@@ -32,11 +33,11 @@ int main()
 
   // define the conitnuous time linear state space system
   auto continuous_time_system_ptr =
-      std::make_shared<uclv::systems::ContinuousTimeLinearStateSpace<dim_state, dim_input, dim_output>>(A, B, C, D,x0);
+      std::make_shared<uclv::systems::ContinuousTimeLinearStateSpace<SCALAR_TYPE,dim_state, dim_input, dim_output>>(A, B, C, D,x0);
 
   // Create the Forward Euler discretized system
   auto discretized_system =
-      std::make_shared<uclv::systems::ForwardEuler<dim_state, dim_input, dim_output>>(continuous_time_system_ptr, 0.1);
+      std::make_shared<uclv::systems::ForwardEuler<SCALAR_TYPE,dim_state, dim_input, dim_output>>(continuous_time_system_ptr, 0.1);
   discretized_system->set_state(x0);
   discretized_system->display();
 
@@ -51,7 +52,7 @@ int main()
   Eigen::Matrix<double, dim_state, 1> x0_hat;
   x0_hat << -0, 0;
 
-  uclv::systems::ExtendedKalmanFilter<dim_state, dim_input, dim_output> ekf(discretized_system, W, V);
+  uclv::systems::ExtendedKalmanFilter<SCALAR_TYPE,dim_state, dim_input, dim_output> ekf(discretized_system, W, V);
   ekf.set_state(x0_hat);
 
   // simulation of the system and the observer
@@ -60,7 +61,7 @@ int main()
   Eigen::Matrix<double, dim_output, 1> y_k;
   Eigen::Matrix<double, dim_state, 1> x_hat_k_k;
   Eigen::Matrix<double, dim_output, 1> y_hat_k;
-  uclv::systems::StateSpaceSystemSimulator<dim_state, dim_input, dim_output> simulator(discretized_system);
+  uclv::systems::StateSpaceSystemSimulator<SCALAR_TYPE,dim_state, dim_input, dim_output> simulator(discretized_system);
 
   for (int i = 0; i < 20; i++)
   {
