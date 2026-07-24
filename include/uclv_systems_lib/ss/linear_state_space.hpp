@@ -33,12 +33,61 @@ namespace uclv::systems
 template <typename Scalar_t, int dim_state, int dim_input, int dim_output, int num_col = 1>
 class LinearStateSpace : public StateSpaceInterface<Scalar_t, dim_state, dim_input, dim_output, num_col, num_col, num_col>
 {
+
+  // TODO: Add support for num_col > 1 (for now, only num_col == 1 is supported)
+  static_assert(num_col == 1, "LinearStateSpace supports only num_col == 1 (for now)");
+
 public:
-  typedef std::shared_ptr<LinearStateSpace> SharedPtr;
-  typedef std::shared_ptr<const LinearStateSpace> ConstSharedPtr;
-  typedef std::weak_ptr<LinearStateSpace> WeakPtr;
-  typedef std::weak_ptr<const LinearStateSpace> ConstWeakPtr;
-  typedef std::unique_ptr<LinearStateSpace> UniquePtr;
+
+  using SharedPtr = std::shared_ptr<LinearStateSpace>;
+  using ConstSharedPtr = std::shared_ptr<const LinearStateSpace>;
+  using WeakPtr = std::weak_ptr<LinearStateSpace>;
+  using ConstWeakPtr = std::weak_ptr<const LinearStateSpace>;
+  using UniquePtr = std::unique_ptr<LinearStateSpace>;
+
+  using StateSpaceInterface_t = StateSpaceInterface<Scalar_t, dim_state, dim_input, dim_output, num_col, num_col, num_col>;
+  using Input_t = typename StateSpaceInterface_t::Input_t;
+  using InputRef_t = typename StateSpaceInterface_t::InputRef_t;
+  using InputConstRef_t = typename StateSpaceInterface_t::InputConstRef_t;
+  using Output_t = typename StateSpaceInterface_t::Output_t;
+  using OutputRef_t = typename StateSpaceInterface_t::OutputRef_t;
+  using OutputConstRef_t = typename StateSpaceInterface_t::OutputConstRef_t;
+
+  using State_t = typename StateSpaceInterface_t::State_t;
+  using StateRef_t = typename StateSpaceInterface_t::StateRef_t;
+  using StateConstRef_t = typename StateSpaceInterface_t::StateConstRef_t;
+
+  using JacobianStateState_t = typename StateSpaceInterface_t::JacobianStateState_t;
+  using JacobianStateStateRef_t = typename StateSpaceInterface_t::JacobianStateStateRef_t;
+  using JacobianStateStateConstRef_t = typename StateSpaceInterface_t::JacobianStateStateConstRef_t;
+
+  using JacobianStateInput_t = typename StateSpaceInterface_t::JacobianStateInput_t;
+  using JacobianStateInputRef_t = typename StateSpaceInterface_t::JacobianStateInputRef_t;
+  using JacobianStateInputConstRef_t = typename StateSpaceInterface_t::JacobianStateInputConstRef_t;
+
+  using JacobianOutputState_t = typename StateSpaceInterface_t::JacobianOutputState_t;
+  using JacobianOutputStateRef_t = typename StateSpaceInterface_t::JacobianOutputStateRef_t;
+  using JacobianOutputStateConstRef_t = typename StateSpaceInterface_t::JacobianOutputStateConstRef_t;
+
+  using JacobianOutputInput_t = typename StateSpaceInterface_t::JacobianOutputInput_t;
+  using JacobianOutputInputRef_t = typename StateSpaceInterface_t::JacobianOutputInputRef_t;
+  using JacobianOutputInputConstRef_t = typename StateSpaceInterface_t::JacobianOutputInputConstRef_t;
+
+  using DynamicMatrix_t = Eigen::Matrix<Scalar_t, dim_state, dim_state>;
+  using DynamicMatrixRef_t = Eigen::Ref<DynamicMatrix_t>;
+  using DynamicMatrixConstRef_t = Eigen::Ref<const DynamicMatrix_t>;
+
+  using InputMatrix_t = Eigen::Matrix<Scalar_t, dim_state, dim_input>;
+  using InputMatrixRef_t = Eigen::Ref<InputMatrix_t>;
+  using InputMatrixConstRef_t = Eigen::Ref<const InputMatrix_t>;
+
+  using OutputMatrix_t = Eigen::Matrix<Scalar_t, dim_output, dim_state>;
+  using OutputMatrixRef_t = Eigen::Ref<OutputMatrix_t>;
+  using OutputMatrixConstRef_t = Eigen::Ref<const OutputMatrix_t>;
+
+  using FeedthroughMatrix_t = Eigen::Matrix<Scalar_t, dim_output, dim_input>;
+  using FeedthroughMatrixRef_t = Eigen::Ref<FeedthroughMatrix_t>;
+  using FeedthroughMatrixConstRef_t = Eigen::Ref<const FeedthroughMatrix_t>;
 
   /*===============CONSTRUCTORS===================*/
 
@@ -59,12 +108,12 @@ public:
 
   /*=============GETTER===========================*/
 
-  inline virtual const Eigen::Matrix<Scalar_t, dim_state, num_col>& get_state() const
+  inline virtual const State_t& get_state() const
   {
     return x_;
   }
 
-  inline virtual const Eigen::Matrix<Scalar_t, dim_output, num_col>& get_output() const
+  inline virtual const Output_t& get_output() const
   {
     return y_;
   }
@@ -73,7 +122,7 @@ public:
 
   /*=============SETTER===========================*/
 
-  inline virtual void set_state(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim_state, num_col>>& x)
+  inline virtual void set_state(const StateConstRef_t& x)
   {
     x_ = x;
     y_ = C * x_;
@@ -82,22 +131,22 @@ public:
   /*==============================================*/
 
   /*=============RUNNER===========================*/
-  inline virtual void state_fcn(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim_state, num_col>>& x,
-                                const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim_input, num_col>>& u_k,
-                                Eigen::Matrix<Scalar_t, dim_state, num_col>& out) const
+  inline virtual void state_fcn(const StateConstRef_t& x,
+                                const InputConstRef_t& u_k,
+                                StateRef_t out) const
   {
     out = A * x + B * u_k;
   }
-  inline virtual void output_fcn(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim_state, num_col>>& x,
-                                 const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim_input, num_col>>& u_k,
-                                 Eigen::Matrix<Scalar_t, dim_output, num_col>& out) const
+  inline virtual void output_fcn(const StateConstRef_t& x,
+                                 const InputConstRef_t& u_k,
+                                 OutputRef_t out) const
   {
     out = C * x + D * u_k;
   }
 
-  inline virtual void jacobx_state_fcn(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim_state, num_col>>& x,
-                                       const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim_input, num_col>>& u_k,
-                                       Eigen::Matrix<Scalar_t, dim_state, dim_state>& out) const
+  inline virtual void jacobx_state_fcn(const StateConstRef_t& x,
+                                       const InputConstRef_t& u_k,
+                                       JacobianStateStateRef_t out) const
   {
     (void)x;
     (void)u_k;
@@ -107,9 +156,9 @@ public:
     }
     out = A;
   }
-  inline virtual void jacobu_state_fcn(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim_state, num_col>>& x,
-                                       const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim_input, num_col>>& u_k,
-                                       Eigen::Matrix<Scalar_t, dim_state, dim_input>& out) const
+  inline virtual void jacobu_state_fcn(const StateConstRef_t& x,
+                                       const InputConstRef_t& u_k,
+                                       JacobianStateInputRef_t out) const
   {
     (void)x;
     (void)u_k;
@@ -120,9 +169,9 @@ public:
     out = B;
   }
 
-  inline virtual void jacobx_output_fcn(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim_state, num_col>>& x,
-                                        const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim_input, num_col>>& u_k,
-                                        Eigen::Matrix<Scalar_t, dim_output, dim_state>& out) const
+  inline virtual void jacobx_output_fcn(const StateConstRef_t& x,
+                                        const InputConstRef_t& u_k,
+                                        JacobianOutputStateRef_t out) const
   {
     (void)x;
     (void)u_k;
@@ -133,9 +182,9 @@ public:
     out = C;
   }
 
-  inline virtual void jacobu_output_fcn(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim_state, num_col>>& x,
-                                        const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim_input, num_col>>& u_k,
-                                        Eigen::Matrix<Scalar_t, dim_output, dim_input>& out) const
+  inline virtual void jacobu_output_fcn(const StateConstRef_t& x,
+                                        const InputConstRef_t& u_k,
+                                        JacobianOutputInputRef_t out) const
   {
     (void)x;
     (void)u_k;
@@ -146,8 +195,7 @@ public:
     out = D;
   }
 
-  inline virtual const Eigen::Matrix<Scalar_t, dim_output, num_col>&
-  step(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim_input, num_col>>& u_k)
+  inline virtual const Output_t& step(const InputConstRef_t& u_k)
   {
     state_fcn(x_, u_k, x_);
     output_fcn(x_, u_k, y_);
@@ -178,14 +226,14 @@ public:
   /*==============================================*/
 
 protected:
-  Eigen::Matrix<Scalar_t, dim_state, num_col> x_;
-  Eigen::Matrix<Scalar_t, dim_output, num_col> y_;
+  State_t x_;
+  Output_t y_;
 
 public:
-  Eigen::Matrix<Scalar_t, dim_state, dim_state> A;
-  Eigen::Matrix<Scalar_t, dim_state, dim_input> B;
-  Eigen::Matrix<Scalar_t, dim_output, dim_state> C;
-  Eigen::Matrix<Scalar_t, dim_output, dim_input> D;
+  DynamicMatrix_t A;
+  InputMatrix_t B;
+  OutputMatrix_t C;
+  FeedthroughMatrix_t D;
 };
 
 }  // namespace uclv::systems

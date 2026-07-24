@@ -30,140 +30,179 @@
 namespace uclv::systems
 {
 
-template <typename Scalar_t, int dim1_state, int dim1_input, int dim1_output, int dim2_state = 1, int dim2_input = 1, int dim2_output = 1>
-class StateSpaceInterface : public SystemInterface<Scalar_t, dim1_input, dim1_output, dim2_input, dim2_output>
-{
-public:
-  typedef std::shared_ptr<StateSpaceInterface> SharedPtr;
-  typedef std::shared_ptr<const StateSpaceInterface> ConstSharedPtr;
-  typedef std::weak_ptr<StateSpaceInterface> WeakPtr;
-  typedef std::weak_ptr<const StateSpaceInterface> ConstWeakPtr;
-  typedef std::unique_ptr<StateSpaceInterface> UniquePtr;
-
-protected:
-public:
-  /*===============CONSTRUCTORS===================*/
-
-  StateSpaceInterface() = default;
-
-  //! Copy Constructor
-  StateSpaceInterface(const StateSpaceInterface& sys) = default;
-
-  virtual ~StateSpaceInterface() = default;
-
-  //! Clone the object
-  virtual StateSpaceInterface* clone() const = 0;
-
-  /*==============================================*/
-
-  /*=============GETTER===========================*/
-
-  inline virtual const Eigen::Matrix<Scalar_t, dim1_state, dim2_state>& get_state() const = 0;
-
-  inline virtual const Eigen::Matrix<Scalar_t, dim1_output, dim2_output>& get_output() const = 0;
-
-  /*==============================================*/
-
-  /*=============SETTER===========================*/
-
-  inline virtual void set_state(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_state, dim2_state>>& x) = 0;
-
-  /*==============================================*/
-
-  /*=============RUNNER===========================*/
-
-  //! State function
-  inline virtual void state_fcn(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_state, dim2_state>>& x,
-                                const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_input, dim2_input>>& u_k,
-                                Eigen::Matrix<Scalar_t, dim1_state, dim2_state>& out) const = 0;
-
-  //! Output function
-  inline virtual void output_fcn(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_state, dim2_state>>& x,
-                                 const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_input, dim2_input>>& u_k,
-                                 Eigen::Matrix<Scalar_t, dim1_output, dim2_output>& out) const = 0;
-
-  //! Jacobian of the state function with respect to the state
-  inline virtual void jacobx_state_fcn(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_state, dim2_state>>& x,
-                                       const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_input, dim2_input>>& u_k,
-                                       Eigen::Matrix<Scalar_t, dim1_state, dim1_state>& out) const
+  template <typename Scalar_t, int dim1_state, int dim1_input, int dim1_output, int dim2_state = 1, int dim2_input = 1, int dim2_output = 1, typename size_t = std::size_t>
+  class StateSpaceInterface : public SystemInterface<Scalar_t, dim1_input, dim1_output, dim2_input, dim2_output, size_t>
   {
-    (void)x;
-    (void)u_k;
-    (void)out;
-    if (dim2_state != 1)
+  public:
+
+    using SharedPtr = std::shared_ptr<StateSpaceInterface>;
+    using ConstSharedPtr = std::shared_ptr<const StateSpaceInterface>;
+    using WeakPtr = std::weak_ptr<StateSpaceInterface>;
+    using ConstWeakPtr = std::weak_ptr<const StateSpaceInterface>;
+    using UniquePtr = std::unique_ptr<StateSpaceInterface>;
+
+    using SystemInterface_t = SystemInterface<Scalar_t, dim1_input, dim1_output, dim2_input, dim2_output, size_t>;
+    using Input_t = typename SystemInterface_t::Input_t;
+    using InputRef_t = typename SystemInterface_t::InputRef_t;
+    using InputConstRef_t = typename SystemInterface_t::InputConstRef_t;
+    using Output_t = typename SystemInterface_t::Output_t;
+    using OutputRef_t = typename SystemInterface_t::OutputRef_t;
+    using OutputConstRef_t = typename SystemInterface_t::OutputConstRef_t;
+
+    using State_t = Eigen::Matrix<Scalar_t, dim1_state, dim2_state>;
+    using StateRef_t = Eigen::Ref<State_t>;
+    using StateConstRef_t = Eigen::Ref<const State_t>;
+
+    using JacobianStateState_t = Eigen::Matrix<Scalar_t, dim1_state * dim2_state, dim1_state * dim2_state>;
+    using JacobianStateStateRef_t = Eigen::Ref<JacobianStateState_t>;
+    using JacobianStateStateConstRef_t = Eigen::Ref<const JacobianStateState_t>;
+
+    using JacobianStateInput_t = Eigen::Matrix<Scalar_t, dim1_state * dim2_state, dim1_input * dim2_input>;
+    using JacobianStateInputRef_t = Eigen::Ref<JacobianStateInput_t>;
+    using JacobianStateInputConstRef_t = Eigen::Ref<const JacobianStateInput_t>;
+
+    using JacobianOutputState_t = Eigen::Matrix<Scalar_t, dim1_output * dim2_output, dim1_state * dim2_state>;
+    using JacobianOutputStateRef_t = Eigen::Ref<JacobianOutputState_t>;
+    using JacobianOutputStateConstRef_t = Eigen::Ref<const JacobianOutputState_t>;
+
+    using JacobianOutputInput_t = Eigen::Matrix<Scalar_t, dim1_output * dim2_output, dim1_input * dim2_input>;
+    using JacobianOutputInputRef_t = Eigen::Ref<JacobianOutputInput_t>;
+    using JacobianOutputInputConstRef_t = Eigen::Ref<const JacobianOutputInput_t>;
+
+  protected:
+  public:
+    /*===============CONSTRUCTORS===================*/
+
+    StateSpaceInterface() = default;
+
+    //! Copy Constructor
+    StateSpaceInterface(const StateSpaceInterface &sys) = default;
+
+    virtual ~StateSpaceInterface() = default;
+
+    //! Clone the object
+    virtual StateSpaceInterface *clone() const = 0;
+
+    /*==============================================*/
+
+    /*=============GETTER===========================*/
+
+    inline virtual const State_t &get_state() const = 0;
+
+    inline virtual const Output_t &get_output() const = 0;
+
+    /*==============================================*/
+
+    /*=============SETTER===========================*/
+
+    inline virtual void set_state(const StateConstRef_t &x) = 0;
+
+    /*==============================================*/
+
+    /*=============RUNNER===========================*/
+
+    //! State function
+    inline virtual void state_fcn(const StateConstRef_t &x,
+                                  const InputConstRef_t &u_k,
+                                  StateRef_t out) const = 0;
+
+    //! Output function
+    inline virtual void output_fcn(const StateConstRef_t &x,
+                                   const InputConstRef_t &u_k,
+                                   OutputRef_t out) const = 0;
+
+    //! Jacobian of the state function with respect to the state
+    inline virtual void jacobx_state_fcn(const StateConstRef_t &x,
+                                         const InputConstRef_t &u_k,
+                                         JacobianStateStateRef_t out) const
     {
-      throw std::runtime_error("The Jacobian of the state function is not defined for dim2_state != 1");
+      (void)x;
+      (void)u_k;
+      (void)out;
+      if (dim2_state != 1)
+      {
+        throw std::runtime_error("The Jacobian of the state function is not defined for dim2_state != 1");
+      }
     }
-  }
 
-  //! Jacobian of the state function with respect to the input
-  inline virtual void jacobu_state_fcn(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_state, dim2_state>>& x,
-                                       const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_input, dim2_input>>& u_k,
-                                       Eigen::Matrix<Scalar_t, dim1_state, dim1_input>& out) const
-  {
-    (void)x;
-    (void)u_k;
-    (void)out;
-    if (dim2_state != 1)
+    //! Jacobian of the state function with respect to the input
+    inline virtual void jacobu_state_fcn(const StateConstRef_t &x,
+                                         const InputConstRef_t &u_k,
+                                         JacobianStateInputRef_t out) const
     {
-      throw std::runtime_error("The Jacobian of the state function is not defined for dim2_state != 1");
+      (void)x;
+      (void)u_k;
+      (void)out;
+      if (dim2_state != 1)
+      {
+        throw std::runtime_error("The Jacobian of the state function is not defined for dim2_state != 1");
+      }
     }
-  }
 
-  //! Jacobian of the output function with respect to the state
-  inline virtual void jacobx_output_fcn(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_state, dim2_state>>& x,
-                                        const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_input, dim2_input>>& u_k,
-                                        Eigen::Matrix<Scalar_t, dim1_output, dim1_state>& out) const
-  {
-    (void)x;
-    (void)u_k;
-    (void)out;
-    if (dim2_output != 1)
+    //! Jacobian of the output function with respect to the state
+    inline virtual void jacobx_output_fcn(const StateConstRef_t &x,
+                                          const InputConstRef_t &u_k,
+                                          JacobianOutputStateRef_t out) const
     {
-      throw std::runtime_error("The Jacobian of the output function is not defined for dim2_output != 1");
+      (void)x;
+      (void)u_k;
+      (void)out;
+      if (dim2_output != 1)
+      {
+        throw std::runtime_error("The Jacobian of the output function is not defined for dim2_output != 1");
+      }
     }
-  }
 
-  // Jacobian of the output function with respect to the input
-  inline virtual void jacobu_output_fcn(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_state, dim2_state>>& x,
-                                        const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_input, dim2_input>>& u_k,
-                                        Eigen::Matrix<Scalar_t, dim1_output, dim1_input>& out) const
-  {
-    (void)x;
-    (void)u_k;
-    (void)out;
-    if (dim2_output != 1)
+    //! Jacobian of the output function with respect to the input
+    inline virtual void jacobu_output_fcn(const StateConstRef_t &x,
+                                          const InputConstRef_t &u_k,
+                                          JacobianOutputInputRef_t out) const
     {
-      throw std::runtime_error("The Jacobian of the output function is not defined for dim2_output != 1");
+      (void)x;
+      (void)u_k;
+      (void)out;
+      if (dim2_output != 1)
+      {
+        throw std::runtime_error("The Jacobian of the output function is not defined for dim2_output != 1");
+      }
     }
-  }
 
-  inline virtual const Eigen::Matrix<Scalar_t, dim1_output, dim2_output>&
-  step(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_input, dim2_input>>& u_k) = 0;
+    inline virtual const Output_t &
+    step(const InputConstRef_t &u_k) override = 0;
 
-  /*==============================================*/
+    /*==============================================*/
 
-  /*=============VARIE===========================*/
-  inline virtual void reset() = 0;
+    /*=============VARIE===========================*/
+    inline virtual void reset() = 0;
 
-  virtual unsigned int get_size_state() const
-  {
-    return dim1_state;
-  }
+    inline virtual void get_resetted_state(StateRef_t x) const 
+    {
+      x.setZero();
+    }
 
-  virtual unsigned int get_size1_state() const
-  {
-    return dim1_state;
-  }
+    inline virtual void get_resetted_output(OutputRef_t y) const
+    {
+      y.setZero();
+    }
 
-  virtual unsigned int get_size2_state() const
-  {
-    return dim2_state;
-  }
+    virtual size_t get_size_state() const
+    {
+      return dim1_state;
+    }
 
-  virtual void display() const = 0;
+    virtual size_t get_size1_state() const
+    {
+      return dim1_state;
+    }
 
-  /*==============================================*/
-};
+    virtual size_t get_size2_state() const
+    {
+      return dim2_state;
+    }
 
-}  // namespace uclv::systems
+    virtual void display() const = 0;
+
+    /*==============================================*/
+  };
+
+} // namespace uclv::systems

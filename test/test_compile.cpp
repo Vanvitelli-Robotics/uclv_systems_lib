@@ -9,8 +9,8 @@ int main()
 {
   uclv::systems::controllers::PI pi(0.1, 1.0, 1.0);
   uclv::systems::StateSpaceSystemSimulator<SCALAR_TYPE,2, 3, 4, 5, 6, 7> simulator1;
-  auto system = std::make_shared<uclv::systems::LinearStateSpace<SCALAR_TYPE,2, 3, 4, 5>>();
-  uclv::systems::StateSpaceSystemSimulator<SCALAR_TYPE,2, 3, 4, 5, 5, 5> simulator2(system);
+  auto system = std::make_shared<uclv::systems::LinearStateSpace<SCALAR_TYPE,2, 3, 4>>();
+  uclv::systems::StateSpaceSystemSimulator<SCALAR_TYPE,2, 3, 4> simulator2(system);
   auto continuous_time_linear_state_space_system = std::make_shared<uclv::systems::ContinuousTimeLinearStateSpace<SCALAR_TYPE,3,2,1,1>>();
   continuous_time_linear_state_space_system->display();
   uclv::systems::ForwardEuler<SCALAR_TYPE,3,2,1,1,1,1> forward_euler(continuous_time_linear_state_space_system,0.1);

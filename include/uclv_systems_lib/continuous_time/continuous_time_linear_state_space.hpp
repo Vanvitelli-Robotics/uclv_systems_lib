@@ -95,20 +95,20 @@ public:
   /*=============RUNNER===========================*/
   inline virtual void state_fcn(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim_state, num_col>>& x,
                                 const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim_input, num_col>>& u_k,
-                                Eigen::Matrix<Scalar_t, dim_state, num_col>& out) const
+                                Eigen::Ref<Eigen::Matrix<Scalar_t, dim_state, num_col>> out) const
   {
     out = A * x + B * u_k;
   }
   inline virtual void output_fcn(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim_state, num_col>>& x,
                                  const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim_input, num_col>>& u_k,
-                                 Eigen::Matrix<Scalar_t, dim_output, num_col>& out) const
+                                 Eigen::Ref<Eigen::Matrix<Scalar_t, dim_output, num_col>> out) const
   {
     out = C * x + D * u_k;
   }
 
   inline virtual void jacobx_state_fcn(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim_state, num_col>>& x,
                                        const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim_input, num_col>>& u_k,
-                                       Eigen::Matrix<Scalar_t, dim_state, dim_state>& out) const
+                                       Eigen::Ref<Eigen::Matrix<Scalar_t, dim_state, dim_state>> out) const
   {
     (void)x;
     (void)u_k;
@@ -120,7 +120,7 @@ public:
   }
   inline virtual void jacobu_state_fcn(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim_state, num_col>>& x,
                                        const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim_input, num_col>>& u_k,
-                                       Eigen::Matrix<Scalar_t, dim_state, dim_input>& out) const
+                                       Eigen::Ref<Eigen::Matrix<Scalar_t, dim_state, dim_input>> out) const
   {
     (void)x;
     (void)u_k;
@@ -133,7 +133,7 @@ public:
 
   inline virtual void jacobx_output_fcn(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim_state, num_col>>& x,
                                         const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim_input, num_col>>& u_k,
-                                        Eigen::Matrix<Scalar_t, dim_output, dim_state>& out) const
+                                        Eigen::Ref<Eigen::Matrix<Scalar_t, dim_output, dim_state>> out) const
   {
     (void)x;
     (void)u_k;
@@ -146,7 +146,7 @@ public:
 
   inline virtual void jacobu_output_fcn(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim_state, num_col>>& x,
                                         const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim_input, num_col>>& u_k,
-                                        Eigen::Matrix<Scalar_t, dim_output, dim_input>& out) const
+                                        Eigen::Ref<Eigen::Matrix<Scalar_t, dim_output, dim_input>> out) const
   {
     (void)x;
     (void)u_k;

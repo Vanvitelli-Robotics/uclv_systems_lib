@@ -111,7 +111,7 @@ public:
   /*=============RUNNER===========================*/
   inline virtual void state_fcn(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_state, dim2_state>>& x,
                                 const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_input, dim2_input>>& u_k,
-                                Eigen::Matrix<Scalar_t, dim1_state, dim2_state>& out) const
+                                Eigen::Ref<Eigen::Matrix<Scalar_t, dim1_state, dim2_state>> out) const
   {
     Eigen::Matrix<Scalar_t, dim1_state, dim2_state> x_k1;
     sys_->state_fcn(x, u_k, x_k1);
@@ -119,14 +119,14 @@ public:
   }
   inline virtual void output_fcn(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_state, dim2_state>>& x,
                                  const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_input, dim2_input>>& u_k,
-                                 Eigen::Matrix<Scalar_t, dim1_output, dim2_output>& out) const
+                                 Eigen::Ref<Eigen::Matrix<Scalar_t, dim1_output, dim2_output>> out) const
   {
     sys_->output_fcn(x, u_k, out);
   }
 
   inline virtual void jacobx_state_fcn(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_state, dim2_state>>& x,
                                        const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_input, dim2_input>>& u_k,
-                                       Eigen::Matrix<Scalar_t, dim1_state, dim1_state>& out) const
+                                       Eigen::Ref<Eigen::Matrix<Scalar_t, dim1_state, dim1_state>> out) const
   {
     (void)x;
     (void)u_k;
@@ -139,7 +139,7 @@ public:
   }
   inline virtual void jacobu_state_fcn(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_state, dim2_state>>& x,
                                        const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_input, dim2_input>>& u_k,
-                                       Eigen::Matrix<Scalar_t, dim1_state, dim1_input>& out) const
+                                       Eigen::Ref<Eigen::Matrix<Scalar_t, dim1_state, dim1_input>> out) const
   {
     (void)x;
     (void)u_k;
@@ -152,7 +152,7 @@ public:
 
   inline virtual void jacobx_output_fcn(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_state, dim2_state>>& x,
                                         const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_input, dim2_input>>& u_k,
-                                        Eigen::Matrix<Scalar_t, dim1_output, dim1_state>& out) const
+                                        Eigen::Ref<Eigen::Matrix<Scalar_t, dim1_output, dim1_state>> out) const
   {
     (void)x;
     (void)u_k;
@@ -165,7 +165,7 @@ public:
 
   inline virtual void jacobu_output_fcn(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_state, dim2_state>>& x,
                                         const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_input, dim2_input>>& u_k,
-                                        Eigen::Matrix<Scalar_t, dim1_output, dim1_input>& out) const
+                                        Eigen::Ref<Eigen::Matrix<Scalar_t, dim1_output, dim1_input>> out) const
   {
     (void)x;
     (void)u_k;

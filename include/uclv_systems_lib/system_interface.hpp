@@ -19,6 +19,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+// TODO for the future:
+//  In C++ moderno e in Eigen si preferisce il CRTP (Curiously Recurring Template Pattern) per fare polimorfismo a tempo di compilazione senza metodi virtuali.
+// Use the CRTP pattern to avoid virtual functions and improve performance. This will require refactoring the current design to use templates and static polymorphism.
+
 #pragma once
 
 #include <memory>
@@ -32,85 +36,92 @@
 namespace uclv::systems
 {
 
-template <typename Scalar_t, int dim1_input, int dim1_output, int dim2_input = 1, int dim2_output = 1>
-class SystemInterface
-{
-public:
-  typedef std::shared_ptr<SystemInterface> SharedPtr;
-  typedef std::shared_ptr<const SystemInterface> ConstSharedPtr;
-  typedef std::weak_ptr<SystemInterface> WeakPtr;
-  typedef std::weak_ptr<const SystemInterface> ConstWeakPtr;
-  typedef std::unique_ptr<SystemInterface> UniquePtr;
-
-protected:
-public:
-  /*===============CONSTRUCTORS===================*/
-
-  SystemInterface() = default;
-
-  //! Copy Constructor
-  SystemInterface(const SystemInterface& sys) = default;
-
-  virtual ~SystemInterface() = default;
-
-  //! Clone the object
-  virtual SystemInterface* clone() const = 0;
-
-  /*==============================================*/
-
-  /*=============GETTER===========================*/
-
-  inline virtual const Eigen::Matrix<Scalar_t, dim1_output, dim2_output>& get_output() const = 0;
-
-  /*==============================================*/
-
-  /*=============SETTER===========================*/
-
-  /*==============================================*/
-
-  /*=============RUNNER===========================*/
-
-  inline virtual const Eigen::Matrix<Scalar_t, dim1_output, dim2_output>&
-  step(const Eigen::Ref<const Eigen::Matrix<Scalar_t, dim1_input, dim2_input>>& u_k) = 0;
-
-  /*==============================================*/
-
-  /*=============VARIE===========================*/
-  inline virtual void reset() = 0;
-
-  virtual unsigned int get_size_input() const
+  template <typename Scalar_t, int dim1_input, int dim1_output, int dim2_input = 1, int dim2_output = 1, typename size_t = std::size_t>
+  class SystemInterface
   {
-    return dim1_input;
-  }
+  public:
+    using SharedPtr = std::shared_ptr<SystemInterface>;
+    using ConstSharedPtr = std::shared_ptr<const SystemInterface>;
+    using WeakPtr = std::weak_ptr<SystemInterface>;
+    using ConstWeakPtr = std::weak_ptr<const SystemInterface>;
+    using UniquePtr = std::unique_ptr<SystemInterface>;
 
-  virtual unsigned int get_size1_input() const
-  {
-    return dim1_input;
-  }
+    using Input_t = Eigen::Matrix<Scalar_t, dim1_input, dim2_input>;
+    using InputRef_t = Eigen::Ref<Input_t>;
+    using InputConstRef_t = Eigen::Ref<const Input_t>;
+    using Output_t = Eigen::Matrix<Scalar_t, dim1_output, dim2_output>;
+    using OutputRef_t = Eigen::Ref<Output_t>;
+    using OutputConstRef_t = Eigen::Ref<const Output_t>;
 
-  virtual unsigned int get_size2_input() const
-  {
-    return dim2_input;
-  }
+  protected:
+  public:
+    /*===============CONSTRUCTORS===================*/
 
-  virtual unsigned int get_size_output() const
-  {
-    return dim1_output;
-  }
+    SystemInterface() = default;
 
-  virtual unsigned int get_size1_output() const
-  {
-    return dim1_output;
-  }
+    //! Copy Constructor
+    SystemInterface(const SystemInterface &sys) = default;
 
-  virtual unsigned int get_size2_output() const
-  {
-    return dim2_output;
-  }
+    virtual ~SystemInterface() = default;
 
-  virtual void display() const = 0;
+    //! Clone the object
+    virtual SystemInterface *clone() const = 0;
 
-  /*==============================================*/
-};
+    /*==============================================*/
 
-}  // namespace uclv::systems
+    /*=============GETTER===========================*/
+
+    inline virtual const Output_t &get_output() const = 0;
+
+    /*==============================================*/
+
+    /*=============SETTER===========================*/
+
+    /*==============================================*/
+
+    /*=============RUNNER===========================*/
+
+    inline virtual const Output_t &
+    step(const InputConstRef_t &u_k) = 0;
+
+    /*==============================================*/
+
+    /*=============VARIE===========================*/
+    inline virtual void reset() = 0;
+
+    virtual size_t get_size_input() const
+    {
+      return dim1_input;
+    }
+
+    virtual size_t get_size1_input() const
+    {
+      return dim1_input;
+    }
+
+    virtual size_t get_size2_input() const
+    {
+      return dim2_input;
+    }
+
+    virtual size_t get_size_output() const
+    {
+      return dim1_output;
+    }
+
+    virtual size_t get_size1_output() const
+    {
+      return dim1_output;
+    }
+
+    virtual size_t get_size2_output() const
+    {
+      return dim2_output;
+    }
+
+    virtual void display() const = 0;
+
+    /*==============================================*/
+  };
+
+} // namespace uclv::systems
